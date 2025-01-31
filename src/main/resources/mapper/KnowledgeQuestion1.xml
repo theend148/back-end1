@@ -1,0 +1,69 @@
+<!--<?xml version="1.0" encoding="UTF-8" ?>-->
+<!--<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">-->
+<!--<mapper namespace="com.example.yourcompany.assessment.repository.KnowledgeQuestionRepository1">-->
+
+<!--    &lt;!&ndash; 定义 resultMap 映射数据库表字段到实体类 &ndash;&gt;-->
+<!--    <resultMap id="KnowledgeQuestionResultMap" type="com.example.yourcompany.assessment.entity.KnowledgeQuestion">-->
+<!--        <id column="question_id" property="questionId" />-->
+<!--        <result column="chapter" property="chapter" />-->
+<!--        <result column="question_type" property="questionType" />-->
+<!--        <result column="content" property="content" />-->
+<!--        <result column="options" property="options" />-->
+<!--        <result column="correct_answer" property="correctAnswer" />-->
+<!--        <result column="difficulty" property="difficulty" />-->
+<!--        <result column="created_at" property="createdAt" />-->
+<!--    </resultMap>-->
+
+<!--    &lt;!&ndash; 通用的列名列表 &ndash;&gt;-->
+<!--    <sql id="KnowledgeQuestion_Column_List">-->
+<!--        question_id, chapter, question_type, content, options, correct_answer, difficulty, created_at-->
+<!--    </sql>-->
+
+<!--    &lt;!&ndash; 插入单条记录 &ndash;&gt;-->
+<!--    <insert id="insertKnowledgeQuestion" parameterType="com.example.yourcompany.assessment.entity.KnowledgeQuestion">-->
+<!--        INSERT INTO knowledge_questions (chapter, question_type, content, options, correct_answer, difficulty, created_at)-->
+<!--        VALUES (#{chapter}, #{questionType}, #{content}, #{options}, #{correctAnswer}, #{difficulty}, #{createdAt})-->
+<!--    </insert>-->
+
+<!--    &lt;!&ndash; 批量插入 &ndash;&gt;-->
+<!--    <insert id="batchInsertKnowledgeQuestions" parameterType="java.util.List">-->
+<!--        INSERT INTO knowledge_questions (chapter, question_type, content, options, correct_answer, difficulty, created_at)-->
+<!--        VALUES-->
+<!--        <foreach collection="list" item="item" separator=",">-->
+<!--            (#{item.chapter}, #{item.questionType}, #{item.content}, #{item.options}, #{item.correctAnswer}, #{item.difficulty}, #{item.createdAt})-->
+<!--        </foreach>-->
+<!--    </insert>-->
+
+<!--    &lt;!&ndash; 根据 ID 查询单条记录 &ndash;&gt;-->
+<!--    <select id="getKnowledgeQuestionById" parameterType="int" resultMap="KnowledgeQuestionResultMap">-->
+<!--        SELECT <include refid="KnowledgeQuestion_Column_List" />-->
+<!--        FROM knowledge_questions-->
+<!--        WHERE question_id = #{questionId}-->
+<!--    </select>-->
+
+<!--    &lt;!&ndash; 查询所有记录 &ndash;&gt;-->
+<!--    <select id="getAllKnowledgeQuestions" resultMap="KnowledgeQuestionResultMap">-->
+<!--        SELECT <include refid="KnowledgeQuestion_Column_List" />-->
+<!--        FROM knowledge_questions-->
+<!--    </select>-->
+
+<!--    &lt;!&ndash; 更新记录 &ndash;&gt;-->
+<!--    <update id="updateKnowledgeQuestionById" parameterType="com.example.yourcompany.assessment.entity.KnowledgeQuestion">-->
+<!--        UPDATE knowledge_questions-->
+<!--        SET-->
+<!--            chapter = #{chapter},-->
+<!--            question_type = #{questionType},-->
+<!--            content = #{content},-->
+<!--            options = #{options},-->
+<!--            correct_answer = #{correctAnswer},-->
+<!--            difficulty = #{difficulty},-->
+<!--            created_at = #{createdAt}-->
+<!--        WHERE question_id = #{questionId}-->
+<!--    </update>-->
+
+<!--    &lt;!&ndash; 删除记录 &ndash;&gt;-->
+<!--    <delete id="deleteKnowledgeQuestionById" parameterType="int">-->
+<!--        DELETE FROM knowledge_questions-->
+<!--        WHERE question_id = #{questionId}-->
+<!--    </delete>-->
+<!--</mapper>-->
