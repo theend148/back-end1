@@ -3,9 +3,11 @@ package com.example.yourcompany.assessment.service.impl;
 import com.example.yourcompany.assessment.dto.*;
 import com.example.yourcompany.assessment.entity.*;
 import com.example.yourcompany.assessment.repository.*;
+import com.example.yourcompany.assessment.service.SubmissionRecordService;
 import com.example.yourcompany.assessment.service.TestService;
 //import jakarta.persistence.EntityNotFoundException;
 import com.example.yourcompany.assessment.util.QuestionResult;
+import com.example.yourcompany.assessment.util.QuestionResult1;
 import com.sun.xml.bind.v2.TODO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -24,6 +26,11 @@ public class TestServiceImpl implements TestService {
     private final UserRepository userRepository;
 
     private final TestRepository testRepository;
+    private final SubmissionRecordRepository submissionRecordRepository;
+
+    private final SubmissionRecordService submissionRecordService;
+
+
     private final KnowledgeQuestionRepository knowledgeQuestionRepository;
     private final AlgorithmQuestionRepository algorithmQuestionRepository;
 
@@ -366,64 +373,118 @@ public class TestServiceImpl implements TestService {
             return resultDTO;
         }
         else{
-//            对于编程题目的处理 稍后进行
-            /*for (Map.Entry<Integer, String> entry : testSubmit.getAnswers().entrySet()) {
-                Integer questionId = entry.getKey();
-                String userAnswer = entry.getValue();
-
-                AlgorithmQuestion question = algorithmQuestionRepository.getByQuestionId(questionId);
-
-                if (question.getDifficulty() == Difficulty.easy) {
-                    easyNum++;
-                    if (userAnswer.equals(question.getCorrectAnswer())) {
-                        easyCorrect++;
-                        totalCorrect++;
-                    }
-                } else if (question.getDifficulty() == Difficulty.medium) {
-                    mediumNum++;
-                    if (userAnswer.equals(question.getCorrectAnswer())) {
-                        mediumCorrect++;
-                        totalCorrect++;
-                    }
-                } else {
-                    hardNum++;
-                    if (userAnswer.equals(question.getCorrectAnswer())) {
-                        hardCorrect++;
-                        totalCorrect++;
-                    }
-                }
-
-                // Add question result to list
-                QuestionResult result = new QuestionResult();
-                result.setQuestionId(questionId.toString());
-                result.setCorrect(userAnswer.equals(question.getCorrectAnswer()));
-                result.setCorrectAnswer(question.getCorrectAnswer());
-                questionResults.add(result);
-            }
-
-            // Calculate accuracies
-            double overallAccuracy = totalCorrect / (double) testSubmit.getAnswers().size();
-            double easyAccuracy = easyNum > 0 ? easyCorrect / (double) easyNum : 0.0;
-            double mediumAccuracy = mediumNum > 0 ? mediumCorrect / (double) mediumNum : 0.0;
-            double hardAccuracy = hardNum > 0 ? hardCorrect / (double) hardNum : 0.0;
-
-            Map<String, Double> accuracyByDifficulty = new HashMap<>();
-            accuracyByDifficulty.put("easy", easyAccuracy);
-            accuracyByDifficulty.put("medium", mediumAccuracy);
-            accuracyByDifficulty.put("hard", hardAccuracy);
-
-            // Populate TestResultDTO
-            TestResultDTO resultDTO = new TestResultDTO();
-            resultDTO.setTestId(testId.toString());
-            resultDTO.setUserId(testSubmit.getUserId());
-            resultDTO.setOverallAccuracy(overallAccuracy);
-            resultDTO.setAccuracyByDifficulty(accuracyByDifficulty);
-            resultDTO.setQuestionResults(questionResults);
-
-            return resultDTO;*/
+//
         }
         return null;
 
+    }
+
+    @Override
+    public TestResult1DTO submitTest1(Integer testId, TestSubmit1DTO testSubmit) {
+        Integer totalCorrect = 0, easyCorrect = 0, mediumCorrect = 0, hardCorrect = 0;
+        Integer easyNum = 0, mediumNum = 0, hardNum = 0;
+
+        // 创建考试记录
+        TestRecord testRecord = new TestRecord(0, testId, testSubmit.getUserId(),
+                LocalDateTime.now(), 0, 0, 0, 0, 0, 0, 0, 0, 0, "");
+        testRecordRepository.save(testRecord);
+
+        // 获取记录ID
+        List<TestRecord> testRecords = testRecordRepository.getByTestId(testId);
+        //获取最新的记录
+        Integer recordId = testRecords.get(testRecords.size() - 1).getRecordId();
+
+        List<QuestionResult1> questionResults = new ArrayList<>();
+
+        // 处理每道题的提交
+        for (Map.Entry<Integer, String> entry : testSubmit.getAnswers().entrySet()) {
+            Integer questionId = entry.getKey();
+            String submissionId = entry.getValue();
+
+            // 获取题目和提交记录
+            AlgorithmQuestion question = algorithmQuestionRepository.getByQuestionId(questionId);
+            SubmissionRecord submission = submissionRecordRepository.getById(Integer.parseInt(submissionId));
+
+            // 判断是否正确（通过率100%为正确）
+            boolean isCorrect = "100.00%".equals(submission.getStatus());
+
+            // 统计不同难度的正确数
+            if (question.getDifficulty() == Difficulty.easy) {
+                easyNum++;
+                if (isCorrect) {
+                    easyCorrect++;
+                    totalCorrect++;
+                }
+            } else if (question.getDifficulty() == Difficulty.medium) {
+                mediumNum++;
+                if (isCorrect) {
+                    mediumCorrect++;
+                    totalCorrect++;
+                }
+            } else {
+                hardNum++;
+                if (isCorrect) {
+                    hardCorrect++;
+                    totalCorrect++;
+                }
+            }
+
+            // 保存答题记录
+            TestAnswerDetail testAnswerDetail = new TestAnswerDetail(
+                    recordId,
+                    questionId,
+                    submissionId,
+                    isCorrect
+            );
+            testAnswerDetailRepository.save(testAnswerDetail);
+
+            // 获取测试用例结果
+            List<TestCaseResult> testCases = submissionRecordService.getTestCaseResults(Integer.parseInt(submissionId));
+
+            // 构建题目结果
+            QuestionResult1 result = QuestionResult1.builder()
+                    .questionId(questionId)
+                    .isCorrect(isCorrect)
+                    .submissionId(submissionId)
+                    .status(submission.getStatus())
+                    .executionTime(submission.getExecutionTime())
+                    .memoryUsage(submission.getMemoryConsumption())
+                    .language(submission.getLanguage())
+                    .code(submission.getSourceCode())
+//                    .errorMessage(submission.getErrorMessage())
+                    .testCases(testCases)
+                    .build();
+
+            questionResults.add(result);
+        }
+
+        // 计算正确率
+        double overallAccuracy = totalCorrect / (double) testSubmit.getAnswers().size();
+        double easyAccuracy = easyNum > 0 ? easyCorrect / (double) easyNum : 0.0;
+        double mediumAccuracy = mediumNum > 0 ? mediumCorrect / (double) mediumNum : 0.0;
+        double hardAccuracy = hardNum > 0 ? hardCorrect / (double) hardNum : 0.0;
+
+        Map<String, Double> accuracyByDifficulty = new HashMap<>();
+        accuracyByDifficulty.put("easy", easyAccuracy);
+        accuracyByDifficulty.put("medium", mediumAccuracy);
+        accuracyByDifficulty.put("hard", hardAccuracy);
+
+        // 更新考试记录
+        testRecord = new TestRecord(recordId, testId, testSubmit.getUserId(),
+                testSubmit.getStartTime(), testSubmit.getTotalTime(),
+                testSubmit.getAnswers().size(), totalCorrect,
+                easyNum, easyCorrect, mediumNum, mediumCorrect,
+                hardNum, hardCorrect, "");
+        testRecordRepository.save(testRecord);
+
+        // 构建返回结果
+        return TestResult1DTO.builder()
+                .testId(testId)
+                .userId(testSubmit.getUserId())
+                .overallAccuracy(overallAccuracy)
+                .accuracyByDifficulty(accuracyByDifficulty)
+                .questionResults(questionResults)
+                .build();
     }
 
     @Override

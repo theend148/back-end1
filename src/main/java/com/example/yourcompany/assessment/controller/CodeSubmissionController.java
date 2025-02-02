@@ -18,6 +18,12 @@ import java.util.List;
 public class CodeSubmissionController {
     private final SubmissionRecordService submissionRecordService;
 
+    @PostMapping("/batch")
+    public ResponseEntity<List<SubmissionRecordDTO>> submitCodeBatch(
+            @Valid @RequestBody List<CodeSubmitRequestDTO> codeSubmitRequests) {
+        return ResponseEntity.ok(submissionRecordService.createBatchSubmissionRecord(codeSubmitRequests));
+    }
+
     @PostMapping
     public ResponseEntity<SubmissionRecordDTO> submitCode(
             @Valid @RequestBody CodeSubmitRequestDTO codeSubmitRequestDTO) {

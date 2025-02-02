@@ -4,11 +4,8 @@ import com.example.yourcompany.assessment.dto.CodeSubmitRequestDTO;
 import com.example.yourcompany.assessment.dto.JudgeRequest;
 import com.example.yourcompany.assessment.dto.JudgeResult;
 import com.example.yourcompany.assessment.dto.SubmissionRecordDTO;
-import com.example.yourcompany.assessment.entity.AlgorithmQuestion;
-import com.example.yourcompany.assessment.entity.SubmissionRecord;
-import com.example.yourcompany.assessment.entity.TestCase;
+import com.example.yourcompany.assessment.entity.*;
 
-import com.example.yourcompany.assessment.entity.User;
 import com.example.yourcompany.assessment.repository.AlgorithmQuestionRepository;
 import com.example.yourcompany.assessment.repository.SubmissionRecordRepository;
 import com.example.yourcompany.assessment.repository.TestCaseRepository;
@@ -49,7 +46,7 @@ public class SubmissionRecordServiceImpl implements SubmissionRecordService {
     private String judge0ApiUrl="http://192.168.254.137:2358";  // 配置文件中设置: judge0.api.url=http://192.168.254.137:2358
     @Transactional
     @Override
-    public SubmissionRecordDTO createSubmissionRecord(CodeSubmitRequestDTO submissionDTO) {
+    public SubmissionRecordDTO createSubmissionRecord(CodeSubmitRequestDTO  submissionDTO) {
         System.out.println("开始处理提交："+submissionDTO);
 
         // 1. 获取题目和用户
@@ -130,6 +127,32 @@ public class SubmissionRecordServiceImpl implements SubmissionRecordService {
         return convertToDTO(savedSubmission);
     }
 
+    @Override
+    public List<SubmissionRecordDTO> createBatchSubmissionRecord(List<CodeSubmitRequestDTO> requests) {
+        List<SubmissionRecordDTO> results = new ArrayList<>();
+        for (CodeSubmitRequestDTO request : requests) {
+            SubmissionRecordDTO result = createSubmissionRecord(request);
+            results.add(result);
+        }
+
+        return results;
+    }
+
+
+    private SubmissionRecordDTO convertToDTO(SubmissionRecord submission) {
+        return SubmissionRecordDTO.builder()
+                .id(submission.getId())
+                .submissionTime(submission.getSubmissionTime())
+                .executionTime(submission.getExecutionTime())
+                .memoryConsumption(submission.getMemoryConsumption())
+                .status(submission.getStatus())
+                .language(submission.getLanguage())
+                .questionId(submission.getQuestion().getQuestionId())
+                .userId(submission.getUser().getUserId())
+                .sourceCode(submission.getSourceCode())  // 添加这一行
+                .build();
+    }
+
     private JudgeResult submitToJudge0(JudgeRequest request) {
         String url = judge0ApiUrl + "/submissions?wait=true";
 
@@ -161,20 +184,6 @@ public class SubmissionRecordServiceImpl implements SubmissionRecordService {
         return result;
     }
 
-    private SubmissionRecordDTO convertToDTO(SubmissionRecord submission) {
-        return SubmissionRecordDTO.builder()
-                .id(submission.getId())
-                .submissionTime(submission.getSubmissionTime())
-                .executionTime(submission.getExecutionTime())
-                .memoryConsumption(submission.getMemoryConsumption())
-                .status(submission.getStatus())
-                .language(submission.getLanguage())
-                .questionId(submission.getQuestion().getQuestionId())
-                .userId(submission.getUser().getUserId())
-                .sourceCode(submission.getSourceCode())  // 添加这一行
-                .build();
-    }
-
 
 
     @Override
@@ -200,5 +209,10 @@ public class SubmissionRecordServiceImpl implements SubmissionRecordService {
         return submissions.stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<TestCaseResult> getTestCaseResults(Integer submissionId) {
+        return null;
     }
 }

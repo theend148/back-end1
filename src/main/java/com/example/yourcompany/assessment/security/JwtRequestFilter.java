@@ -55,7 +55,7 @@ public class JwtRequestFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
 //TODO 这个jwt要好好搞搞  跳过登录和注册请求 前端请求提那边添加一个标识头  然后后端如果找到这个特定的标识头部 则直接放行
-        System.out.println("过滤器开始设置");
+//        System.out.println("过滤器开始设置");
 //
         final String authorizationHeader = request.getHeader("Authorization");
 //
@@ -66,7 +66,7 @@ public class JwtRequestFilter extends OncePerRequestFilter {
         System.out.println(authorizationHeader.substring(7));
 
         if(authorizationHeader.substring(7).equals("guest_token")){
-            System.out.println("guest token  "+authorizationHeader.substring(7));
+//            System.out.println("guest token  "+authorizationHeader.substring(7));
         }
 //
         if(authorizationHeader!=null&&authorizationHeader.substring(7).equals("guest_token")){
@@ -76,7 +76,7 @@ public class JwtRequestFilter extends OncePerRequestFilter {
 
         if (authorizationHeader!=null&& authorizationHeader.startsWith("Bearer ")) {
             jwt = authorizationHeader.substring(7);
-            System.out.println(jwt);
+//            System.out.println(jwt);
             username = jwtTokenUtil.extractUsername(jwt);
         }
 

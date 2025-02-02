@@ -21,6 +21,8 @@ public interface TestService {
     GetTestResponse getTestById(Integer testId);
 
     TestResultDTO submitTest(Integer testId, TestSubmitDTO testSubmit);
+
+    TestResult1DTO submitTest1(Integer testId, TestSubmit1DTO testSubmit);
     TestResultDTO getTestResult(Integer testId);
 
 }

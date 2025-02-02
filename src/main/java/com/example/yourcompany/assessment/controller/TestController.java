@@ -49,6 +49,14 @@ public class TestController {
         return ResponseEntity.ok(testService.submitTest(testId, testSubmit));
     }
 
+    @PostMapping("/{testId}/submit1")
+    public ResponseEntity<TestResult1DTO> submitAlgorithmTest(
+            @PathVariable Integer testId,
+            @RequestBody TestSubmit1DTO testSubmit) {
+        System.out.println(testSubmit);
+        return ResponseEntity.ok(testService.submitTest1(testId, testSubmit));
+    }
+
 //    @GetMapping("/{testId}/result")
 //    public ResponseEntity<TestResultDTO> submitTest(
 //            @PathVariable Integer testId) {

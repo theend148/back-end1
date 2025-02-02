@@ -17,4 +17,12 @@ public class QuestionResult {
     Integer questionId;
     Boolean isCorrect;
     String correctAnswer;
+
+//    // 以下字段用于算法题目
+//    private String submissionId;   // 提交ID
+//    private String status;         // 判题状态
+//    private String executionTime;  // 执行时间
+//    private String memoryUsage;    // 内存使用
+//    private String language;       // 编程语言
+//    private String code;           // 提交的代码
 }
