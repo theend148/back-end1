@@ -1,6 +1,5 @@
 package com.example.yourcompany.assessment.dto;
 
-import com.example.yourcompany.assessment.entity.QuestionCategory;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

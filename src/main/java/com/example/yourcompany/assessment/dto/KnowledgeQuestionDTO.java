@@ -1,10 +1,7 @@
 package com.example.yourcompany.assessment.dto;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Data;
 
-import java.util.Arrays;
 
 @Data
 public class KnowledgeQuestionDTO {

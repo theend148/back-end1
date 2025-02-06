@@ -1,15 +1,12 @@
 package com.example.yourcompany.assessment.controller;
 
 import com.example.yourcompany.assessment.dto.PracticeSubmitDTO;
-import com.example.yourcompany.assessment.dto.PracticeSubmitDTO;
 import com.example.yourcompany.assessment.entity.PracticeRecord;
 import com.example.yourcompany.assessment.service.PracticeService;
-//import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-//import javax.validation.Valid;
 import javax.validation.Valid;
 import java.util.List;
 

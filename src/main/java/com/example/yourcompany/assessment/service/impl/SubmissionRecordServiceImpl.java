@@ -212,6 +212,16 @@ public class SubmissionRecordServiceImpl implements SubmissionRecordService {
     }
 
     @Override
+    public List<SubmissionRecordDTO> getSubmissionRecordsByQuestionIdAndUserId(Integer userId, Integer questionId) {
+        List<SubmissionRecord> submissions = submissionRecordRepository
+                .findByUserUserIdAndQuestionQuestionId(userId, questionId);
+
+        return submissions.stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Override
     public List<TestCaseResult> getTestCaseResults(Integer submissionId) {
         return null;
     }

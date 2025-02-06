@@ -1,7 +1,6 @@
 package com.example.yourcompany.assessment.controller;
 
 import com.example.yourcompany.assessment.service.StatisticsService;
-import com.example.yourcompany.assessment.service.StatisticsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;

@@ -20,13 +20,11 @@ public class UserController {
 
     @PostMapping
     public ResponseEntity<UserDTO> createUser(@RequestBody User user) {
-        System.out.println(23);
         return ResponseEntity.ok(userService.createUser(user));
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<UserDTO> getUser(@PathVariable Integer id) {
-        System.out.println(29);
         return userService.getUserById(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
@@ -34,7 +32,6 @@ public class UserController {
 
     @GetMapping
     public ResponseEntity<List<UserDTO>> getAllUsers() {
-        System.out.println(37);
         return ResponseEntity.ok(userService.getAllUsers());
     }
 

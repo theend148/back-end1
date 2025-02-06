@@ -3,9 +3,7 @@ package com.example.yourcompany.assessment.controller;
 import com.example.yourcompany.assessment.dto.*;
 import com.example.yourcompany.assessment.entity.TestRecord;
 import com.example.yourcompany.assessment.service.TestService;
-import com.example.yourcompany.assessment.service.TestService;
 import lombok.RequiredArgsConstructor;
-import org.hibernate.annotations.Parameter;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 

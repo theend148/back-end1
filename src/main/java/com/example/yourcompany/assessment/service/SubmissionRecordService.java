@@ -3,9 +3,7 @@ package com.example.yourcompany.assessment.service;
 import com.example.yourcompany.assessment.dto.CodeSubmitRequestDTO;
 import com.example.yourcompany.assessment.dto.SubmissionRecordDTO;
 import com.example.yourcompany.assessment.entity.TestCaseResult;
-import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -14,9 +12,10 @@ import java.util.List;
  **/
 public interface SubmissionRecordService {
 
-    SubmissionRecordDTO createSubmissionRecord(CodeSubmitRequestDTO  submissionRecordDTO);
+    SubmissionRecordDTO createSubmissionRecord(CodeSubmitRequestDTO submissionRecordDTO);
 
     List<SubmissionRecordDTO> createBatchSubmissionRecord(List<CodeSubmitRequestDTO> submissionRecordDTOs);
+
     SubmissionRecordDTO getSubmissionRecordById(Integer id);
 
     List<SubmissionRecordDTO> getAllSubmissionRecords();
@@ -25,6 +24,7 @@ public interface SubmissionRecordService {
 
     List<SubmissionRecordDTO> getSubmissionRecordsByQuestionId(Integer questionId);
 
-    List<TestCaseResult> getTestCaseResults(Integer submissionId) ;
-}
+    List<SubmissionRecordDTO> getSubmissionRecordsByQuestionIdAndUserId(Integer userId, Integer questionId);
 
+    List<TestCaseResult> getTestCaseResults(Integer submissionId);
+}

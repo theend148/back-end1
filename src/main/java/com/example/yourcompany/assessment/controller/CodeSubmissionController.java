@@ -3,7 +3,6 @@ package com.example.yourcompany.assessment.controller;
 import com.example.yourcompany.assessment.dto.CodeSubmitRequestDTO;
 import com.example.yourcompany.assessment.dto.SubmissionRecordDTO;
 import com.example.yourcompany.assessment.entity.CodeSubmission;
-import com.example.yourcompany.assessment.service.CodeSubmissionService;
 import com.example.yourcompany.assessment.service.SubmissionRecordService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -40,6 +39,12 @@ public class CodeSubmissionController {
     @GetMapping("/question/{questionId}")
     public ResponseEntity<List<SubmissionRecordDTO>> getSubmissionsByQuestionId(@PathVariable Integer questionId) {
         List<SubmissionRecordDTO> submissions = submissionRecordService.getSubmissionRecordsByQuestionId(questionId);
+        return ResponseEntity.ok(submissions);
+    }
+
+    @GetMapping("/question/{userId}/{questionId}")
+    public ResponseEntity<List<SubmissionRecordDTO>> getSubmissionsByQuestionIdAndUserId(@PathVariable Integer userId,@PathVariable Integer questionId) {
+        List<SubmissionRecordDTO> submissions = submissionRecordService.getSubmissionRecordsByQuestionIdAndUserId(userId,questionId);
         return ResponseEntity.ok(submissions);
     }
 

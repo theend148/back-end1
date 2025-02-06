@@ -17,6 +17,10 @@ public interface SubmissionRecordRepository extends JpaRepository<SubmissionReco
 //    List<SubmissionRecord> findByUserId(Integer userId);
     @Query("SELECT s FROM SubmissionRecord s WHERE s.question.questionId = :questionId ORDER BY s.submissionTime DESC")
     List<SubmissionRecord> findByQuestionQuestionId(@Param("questionId") Integer questionId);
+
+
+    List<SubmissionRecord> findByUserUserIdAndQuestionQuestionId(Integer userId, Integer questionId);
+
 //    @EntityGraph(attributePaths = {"sourceCode"})
 //    List<SubmissionRecord> findByQuestionQuestionId(Integer questionId);
 //    List<SubmissionRecord> findByQuestionQuestionId(Integer questionId);
