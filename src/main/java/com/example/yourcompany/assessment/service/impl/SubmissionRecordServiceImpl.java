@@ -61,13 +61,13 @@ public class SubmissionRecordServiceImpl implements SubmissionRecordService {
         if (testCases.isEmpty()) {
             throw new RuntimeException("题目没有测试用例");
         }
-
+        System.out.println("testCases:"+testCases);
         // 3. 获取对应的judge0语言ID
         Integer languageId = LANGUAGE_MAP.get(submissionDTO.getLanguage().toLowerCase());
         if (languageId == null) {
             throw new RuntimeException("不支持的编程语言: " + submissionDTO.getLanguage());
         }
-
+        System.out.println("languageId:"+languageId);
         // 4. 执行判题
         List<JudgeResult> results = new ArrayList<>();
         int passedCount = 0;
@@ -91,7 +91,7 @@ public class SubmissionRecordServiceImpl implements SubmissionRecordService {
                 throw new RuntimeException("判题服务异常", e);
             }
         }
-
+        System.out.println("判题完成");
         // 5. 计算最终结果并创建提交记录
 // 计算通过的百分比
         double passPercentage = (double) passedCount / testCases.size() * 100;

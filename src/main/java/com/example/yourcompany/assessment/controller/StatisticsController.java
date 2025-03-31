@@ -16,16 +16,32 @@ import java.util.Map;
 public class StatisticsController {
     private final StatisticsService statisticsService;
 
-    @GetMapping
-    public ResponseEntity<Map<String, Object>> getStatistics() {
-        Map<String, Object> statistics = new HashMap<>();
-        statistics.put("totalUsers", statisticsService.getTotalUsers());
-        statistics.put("totalQuestions", statisticsService.getTotalQuestions());
-        statistics.put("totalSubmissions", statisticsService.getTotalSubmissions());
-        statistics.put("chapterStatistics", statisticsService.getChapterStatistics());
-        statistics.put("userActivity", statisticsService.getUserActivityStatistics());
-        statistics.put("difficultyDistribution", statisticsService.getDifficultyDistribution());
-        
-        return ResponseEntity.ok(statistics);
+    @GetMapping("/overview")
+    public ResponseEntity<Map<String, Object>> getOverview() {
+        return ResponseEntity.ok(Map.of(
+            "totalUsers", statisticsService.getTotalUsers(),
+            "totalQuestions", statisticsService.getTotalQuestions(),
+            "totalSubmissions", statisticsService.getTotalSubmissions()
+        ));
     }
-} 
+
+    @GetMapping("/user-activity")
+    public ResponseEntity<Map<String, Object>> getUserActivity() {
+        return ResponseEntity.ok(statisticsService.getUserActivityStatistics());
+    }
+
+    @GetMapping("/chapter-distribution")
+    public ResponseEntity<Map<String, Object>> getChapterDistribution() {
+        return ResponseEntity.ok(statisticsService.getChapterStatistics());
+    }
+
+    @GetMapping("/difficulty-distribution")
+    public ResponseEntity<Map<String, Object>> getDifficultyDistribution() {
+        return ResponseEntity.ok(statisticsService.getDifficultyDistribution());
+    }
+
+    @GetMapping("/submission-trend")
+    public ResponseEntity<Map<String, Object>> getSubmissionTrend() {
+        return ResponseEntity.ok(statisticsService.getSubmissionTrend());
+    }
+}
