@@ -193,18 +193,13 @@ public class AdminStatisticsServiceImpl implements AdminStatisticsService {
         LocalDate weekAgo = today.minusWeeks(1);
 
         // 计算总提交数
-        long practiceTotal = practiceRecordRepository.count();
         long submissionTotal = submissionRecordRepository.count();
-        long total = practiceTotal + submissionTotal;
+        long total = submissionTotal;
 
         // 获取近一周提交数
         String recentSql = """
-                    SELECT COUNT(*) FROM (
-                        SELECT submitted_at as time FROM practice_records
-                        UNION ALL
-                        SELECT submission_time as time FROM submission_records
-                    ) as submissions
-                    WHERE time >= ?
+                    SELECT COUNT(*) FROM submission_records
+                    WHERE submission_time >= ?
                 """;
 
         long lastWeek = convertToLong(jdbcTemplate.queryForObject(recentSql, Long.class, weekAgo));
@@ -212,16 +207,9 @@ public class AdminStatisticsServiceImpl implements AdminStatisticsService {
         // 计算提交成功率
         String successRateSql = """
                     SELECT
-                        (
-                            SELECT COUNT(*) FROM practice_records WHERE is_correct = true
-                        ) + (
-                            SELECT COUNT(*) FROM submission_records WHERE status = 'Success'
-                        ) as successful,
-                        (
-                            SELECT COUNT(*) FROM practice_records
-                        ) + (
-                            SELECT COUNT(*) FROM submission_records
-                        ) as total
+                        COUNT(CASE WHEN status = '100.00%' THEN 1 END) as successful,
+                        COUNT(*) as total
+                    FROM submission_records
                 """;
 
         Map<String, Object> rateStats = jdbcTemplate.queryForMap(successRateSql);
@@ -232,22 +220,12 @@ public class AdminStatisticsServiceImpl implements AdminStatisticsService {
         // 获取提交趋势
         String trendSql = """
                     SELECT
-                        date(time) as date,
+                        date(submission_time) as date,
                         COUNT(*) as count,
-                        SUM(CASE WHEN is_successful THEN 1 ELSE 0 END) as successful
-                    FROM (
-                        SELECT
-                            submitted_at as time,
-                            is_correct as is_successful
-                        FROM practice_records
-                        UNION ALL
-                        SELECT
-                            submission_time as time,
-                            CASE WHEN status = 'Success' THEN true ELSE false END as is_successful
-                        FROM submission_records
-                    ) as submissions
-                    WHERE time >= ?
-                    GROUP BY date(time)
+                        SUM(CASE WHEN status = '100.00%' THEN 1 ELSE 0 END) as successful
+                    FROM submission_records
+                    WHERE submission_time >= ?
+                    GROUP BY date(submission_time)
                     ORDER BY date
                 """;
 
@@ -377,7 +355,7 @@ public class AdminStatisticsServiceImpl implements AdminStatisticsService {
                             'algorithm' as type,
                             difficulty,
                             COUNT(sr.id) as attempts,
-                            SUM(CASE WHEN sr.status = 'Success' THEN 1 ELSE 0 END) as correct
+                            SUM(CASE WHEN sr.status = '100.00%' THEN 1 ELSE 0 END) as correct
                         FROM algorithm_questions aq
                         LEFT JOIN submission_records sr ON aq.question_id = sr.question_id
                         GROUP BY aq.question_id, aq.chapter, aq.difficulty
@@ -479,22 +457,13 @@ public class AdminStatisticsServiceImpl implements AdminStatisticsService {
             String submissionsSql = """
                         SELECT
                             COUNT(*) as total,
-                            SUM(CASE WHEN is_successful THEN 1 ELSE 0 END) as successful
-                        FROM (
-                            SELECT
-                                is_correct as is_successful
-                            FROM practice_records
-                            WHERE submitted_at BETWEEN ? AND ?
-                            UNION ALL
-                            SELECT
-                                CASE WHEN status = 'Success' THEN true ELSE false END as is_successful
-                            FROM submission_records
-                            WHERE submission_time BETWEEN ? AND ?
-                        ) as submissions
+                            SUM(CASE WHEN status = '100.00%' THEN 1 ELSE 0 END) as successful
+                        FROM submission_records
+                        WHERE submission_time BETWEEN ? AND ?
                     """;
 
             Map<String, Object> submissionStat = jdbcTemplate.queryForMap(
-                    submissionsSql, startOfDay, endOfDay, startOfDay, endOfDay);
+                    submissionsSql, startOfDay, endOfDay);
 
             long totalSubmissions = convertToLong(submissionStat.get("total"));
             long successfulSubmissions = convertToLong(submissionStat.get("successful"));
