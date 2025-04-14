@@ -317,80 +317,170 @@ public class UserProgressServiceImpl implements UserProgressService {
         List<TestRecord> testRecords = testRecordRepository.findByUserId(userId);
         int totalTests = testRecords.size();
 
-        // 已完成的考试数量
-        long completedTests = testRecords.stream()
-                .filter(record -> "COMPLETED".equals(record.getStatus()))
-                .count();
-
-        // 平均分数和最高分数
+        // 平均正确率和最高正确率
         double avgScore = 0;
         double bestScore = 0;
 
         if (!testRecords.isEmpty()) {
-            // 计算已完成考试的平均分数
+            // 计算所有考试的平均正确率，并防止除以零
             avgScore = testRecords.stream()
-                    .filter(record -> "COMPLETED".equals(record.getStatus()))
-                    .mapToDouble(record -> (double) record.getCorrectCount() / record.getTotalQuestions() * 100)
+                    .filter(record -> record.getTotalQuestions() != null && record.getTotalQuestions() > 0)
+                    .mapToDouble(record -> {
+                        try {
+                            return (double) record.getCorrectCount() / record.getTotalQuestions() * 100;
+                        } catch (Exception e) {
+                            return 0.0;
+                        }
+                    })
                     .average()
                     .orElse(0);
 
-            // 计算已完成考试的最高分数
+            // 计算所有考试的最高正确率，并防止除以零
             bestScore = testRecords.stream()
-                    .filter(record -> "COMPLETED".equals(record.getStatus()))
-                    .mapToDouble(record -> (double) record.getCorrectCount() / record.getTotalQuestions() * 100)
+                    .filter(record -> record.getTotalQuestions() != null && record.getTotalQuestions() > 0)
+                    .mapToDouble(record -> {
+                        try {
+                            return (double) record.getCorrectCount() / record.getTotalQuestions() * 100;
+                        } catch (Exception e) {
+                            return 0.0;
+                        }
+                    })
                     .max()
                     .orElse(0);
         }
 
-        // 获取最近的5次考试
-        List<Map<String, Object>> recentTests = testRecords.stream()
-                .filter(record -> "COMPLETED".equals(record.getStatus()))
+        // 处理NaN和Infinity情况
+        if (Double.isNaN(avgScore) || Double.isInfinite(avgScore)) {
+            avgScore = 0.0;
+        }
+        if (Double.isNaN(bestScore) || Double.isInfinite(bestScore)) {
+            bestScore = 0.0;
+        }
+
+        // 按照考试ID分组，找出每个考试中正确率最高的记录和用时最短的记录
+        Map<Integer, List<TestRecord>> testRecordsByTestId = testRecords.stream()
+                .collect(Collectors.groupingBy(TestRecord::getTestId));
+
+        // 存储最佳记录（每个考试只保留一条）
+        List<TestRecord> bestRecords = new ArrayList<>();
+
+        for (List<TestRecord> records : testRecordsByTestId.values()) {
+            if (records.isEmpty()) {
+                continue;
+            }
+
+            // 优先按正确率排序，其次是用时
+            TestRecord bestRecord = records.stream()
+                    .sorted((r1, r2) -> {
+                        try {
+                            // 首先比较正确率（高的优先）
+                            double correctRate1 = r1.getTotalQuestions() > 0
+                                    ? (double) r1.getCorrectCount() / r1.getTotalQuestions()
+                                    : 0;
+                            double correctRate2 = r2.getTotalQuestions() > 0
+                                    ? (double) r2.getCorrectCount() / r2.getTotalQuestions()
+                                    : 0;
+
+                            // 处理NaN情况
+                            if (Double.isNaN(correctRate1))
+                                correctRate1 = 0;
+                            if (Double.isNaN(correctRate2))
+                                correctRate2 = 0;
+
+                            int rateComparison = Double.compare(correctRate2, correctRate1);
+                            if (rateComparison != 0) {
+                                return rateComparison;
+                            }
+
+                            // 正确率相同，比较用时（短的优先）
+                            Long time1 = r1.getTotalTime() != null ? r1.getTotalTime() : Long.MAX_VALUE;
+                            Long time2 = r2.getTotalTime() != null ? r2.getTotalTime() : Long.MAX_VALUE;
+
+                            return Long.compare(time1, time2);
+                        } catch (Exception e) {
+                            return 0; // 如果比较出错，视为相等
+                        }
+                    })
+                    .findFirst()
+                    .orElse(null);
+
+            if (bestRecord != null) {
+                bestRecords.add(bestRecord);
+            }
+        }
+
+        // 获取最近的考试记录（按开始时间倒序，只取最佳记录）
+        List<Map<String, Object>> recentTests = bestRecords.stream()
                 .sorted(Comparator.comparing(TestRecord::getStartTime).reversed())
-                .limit(5)
                 .map(record -> {
                     Map<String, Object> testData = new HashMap<>();
 
-                    // 获取考试信息
-                    Test1 test = testRepository.getByTestId(record.getTestId());
+                    try {
+                        // 获取考试信息
+                        Test1 test = testRepository.getByTestId(record.getTestId());
+                        if (test != null) {
+                            testData.put("title", test.getTitle());
+                            testData.put("chapter", test.getChapter());
+                        } else {
+                            testData.put("title", "未知考试");
+                            testData.put("chapter", "未知章节");
+                        }
 
-                    testData.put("title", test.getTitle());
-                    testData.put("chapter", test.getChapter());
-                    testData.put("score", (double) record.getCorrectCount() / record.getTotalQuestions() * 100);
+                        // 计算分数，避免除以零
+                        double score = 0.0;
+                        if (record.getTotalQuestions() != null && record.getTotalQuestions() > 0) {
+                            score = (double) record.getCorrectCount() / record.getTotalQuestions() * 100;
+                            // 处理NaN情况
+                            if (Double.isNaN(score) || Double.isInfinite(score)) {
+                                score = 0.0;
+                            }
+                        }
+                        testData.put("score", score);
 
-                    // 获取考试用时（秒）
-                    long durationInSeconds = record.getTotalTime() != null ? record.getTotalTime() : 0;
+                        // 获取考试用时（秒）
+                        long durationInSeconds = record.getTotalTime() != null ? record.getTotalTime() : 0;
 
-                    // 格式化为 "小时:分钟:秒"
-                    long hours = durationInSeconds / 3600;
-                    long minutes = (durationInSeconds % 3600) / 60;
-                    long seconds = durationInSeconds % 60;
-                    String duration = String.format("%02d:%02d:%02d", hours, minutes, seconds);
+                        // 格式化为 "小时:分钟:秒"
+                        long hours = durationInSeconds / 3600;
+                        long minutes = (durationInSeconds % 3600) / 60;
+                        long seconds = durationInSeconds % 60;
+                        String duration = String.format("%02d:%02d:%02d", hours, minutes, seconds);
 
-                    testData.put("duration", duration);
+                        testData.put("duration", duration);
 
-                    // 计算完成时间（开始时间 + 持续时间）
-                    LocalDateTime completedDateTime = null;
-                    if (record.getStartTime() != null && record.getTotalTime() != null) {
-                        completedDateTime = record.getStartTime().plusSeconds(record.getTotalTime());
-                    } else {
-                        completedDateTime = record.getStartTime(); // 如果没有持续时间，则使用开始时间
+                        // 计算完成时间（开始时间 + 持续时间）
+                        LocalDateTime completedDateTime = null;
+                        if (record.getStartTime() != null && record.getTotalTime() != null) {
+                            completedDateTime = record.getStartTime().plusSeconds(record.getTotalTime());
+                        } else {
+                            completedDateTime = record.getStartTime(); // 如果没有持续时间，则使用开始时间
+                        }
+
+                        // 格式化完成时间
+                        String completedAt = completedDateTime != null
+                                ? completedDateTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))
+                                : "";
+                        testData.put("completedAt", completedAt);
+                    } catch (Exception e) {
+                        // 处理任何计算中的异常，确保至少有基本数据
+                        testData.putIfAbsent("title", "未知考试");
+                        testData.putIfAbsent("chapter", "未知章节");
+                        testData.putIfAbsent("score", 0.0);
+                        testData.putIfAbsent("duration", "00:00:00");
+                        testData.putIfAbsent("completedAt", "");
                     }
-
-                    // 格式化完成时间
-                    String completedAt = completedDateTime != null
-                            ? completedDateTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))
-                            : "";
-                    testData.put("completedAt", completedAt);
 
                     return testData;
                 })
                 .collect(Collectors.toList());
 
-        testPerformance.put("totalTests", totalTests);
-        testPerformance.put("completedTests", completedTests);
+        // 更新总考试数为考试ID的数量（去重后）
+        int uniqueTestCount = testRecordsByTestId.size();
+        testPerformance.put("totalTests", uniqueTestCount);
         testPerformance.put("avgScore", avgScore);
         testPerformance.put("bestScore", bestScore);
         testPerformance.put("recentTests", recentTests);
+        System.out.println("testPerformance: " + testPerformance);
 
         return testPerformance;
     }
