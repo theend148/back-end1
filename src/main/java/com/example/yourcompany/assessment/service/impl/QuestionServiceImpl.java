@@ -22,15 +22,14 @@ public class QuestionServiceImpl implements QuestionService {
     private final AlgorithmQuestionRepository algorithmQuestionRepository;
     private final TestCaseRepository testCaseRepository;
 
-
-    private final  AlgorithmChapterRepository algorithmChapterRepository;
+    private final AlgorithmChapterRepository algorithmChapterRepository;
 
     private final KnowledgeChapterRepository knowledgeChapterRepository;
 
     @Override
     public List<KnowledgeQuestionDTO> getAllKnowledgeQuestions() {
 
-        System.out.println("-------getAllKnowledgeQuestions" );
+        System.out.println("-------getAllKnowledgeQuestions");
         return knowledgeQuestionRepository.findAll().stream()
                 .map(this::convertToKnowledgeQuestionDTO)
                 .collect(Collectors.toList());
@@ -51,8 +50,15 @@ public class QuestionServiceImpl implements QuestionService {
 
     @Override
     public KnowledgeQuestionDTO createKnowledgeQuestion(KnowledgeQuestionDTO questionDTO) {
+        // 添加日志记录提交的数据
+        System.out.println("Creating knowledge question with data: " + questionDTO);
+
+        // 验证content字段
+        if (questionDTO.getContent() == null || questionDTO.getContent().trim().isEmpty()) {
+            throw new IllegalArgumentException("题目内容(content)不能为空");
+        }
+
         KnowledgeQuestion question = convertToKnowledgeQuestion(questionDTO);
-//        System.out.println(question);
         return convertToKnowledgeQuestionDTO(knowledgeQuestionRepository.save(question));
     }
 
@@ -68,7 +74,6 @@ public class QuestionServiceImpl implements QuestionService {
         AlgorithmChapter obj = convertToAlgorithmChapter(questionDTO);
 
         return convertToAlgorithmChapterDTO(algorithmChapterRepository.save(obj));
-
 
     }
 
@@ -151,77 +156,83 @@ public class QuestionServiceImpl implements QuestionService {
     }
 
     private KnowledgeQuestionDTO convertToKnowledgeQuestionDTO(KnowledgeQuestion question) {
-//        modify
-//        KnowledgeQuestionDTO dto = new KnowledgeQuestionDTO();
-//        dto.setQuestionId(question.getQuestionId());
-//        dto.setChapter(question.getChapter());
-//        dto.setQuestionType(question.getQuestionType().toString());
-//        dto.setContent(question.getContent());
-//        dto.setOptions(question.getOptions() != null ? question.getOptions().split(",") : null);
-//
-//        dto.setDifficulty(question.getDifficulty().toString());
-//
-//        return dto;
+        System.out.println("convertToKnowledgeQuestionDTO   ----- KnowledgeQuestionDTO：" + question);
         KnowledgeQuestionDTO dto = new KnowledgeQuestionDTO();
         dto.setQuestionId(question.getQuestionId());
         dto.setChapter(question.getChapter());
-        dto.setQuestionType(question.getQuestionType().toString());
-        dto.setContent(question.getContent());
-        dto.setCorrectAnswer(question.getCorrectAnswer());
-        // 将 JSON 字符串反序列化为 String[] 数组
-        if (question.getOptions() != null) {
-            try {
-                ObjectMapper objectMapper = new ObjectMapper();
-                // 反序列化 JSON 字符串为 String[] 数组
-                String[] optionsArray = objectMapper.readValue(question.getOptions(), String[].class);
-                dto.setOptions(optionsArray);
-            } catch (Exception e) {
-                e.printStackTrace();  // 处理反序列化异常
+        dto.setQuestionType(question.getQuestionType() != null ? question.getQuestionType().toString() : "choice");
+
+        // 处理content字段可能为null的情况
+        dto.setContent(question.getContent() != null ? question.getContent() : "");
+
+        // 处理correctAnswer字段可能为null的情况
+        dto.setCorrectAnswer(question.getCorrectAnswer() != null ? question.getCorrectAnswer() : "");
+
+        // 处理difficulty字段可能为null的情况
+        dto.setDifficulty(question.getDifficulty() != null ? question.getDifficulty().toString() : "easy");
+
+        // 处理questionScope字段可能为null的情况
+        dto.setQuestionScope(question.getQuestionScope() != null ? question.getQuestionScope().toString() : "practice");
+
+        ObjectMapper mapper = new ObjectMapper();
+        try {
+            if (question.getOptions() != null) {
+                dto.setOptions(mapper.readValue(question.getOptions(), String[].class));
+            } else {
+                dto.setOptions(new String[0]);
             }
-        } else {
-            dto.setOptions(null);  // 如果 options 为 null，则设置为 null
+        } catch (JsonProcessingException e) {
+            // 处理异常...
+            dto.setOptions(new String[0]);
         }
 
-        dto.setDifficulty(question.getDifficulty().toString());
         return dto;
     }
 
+    private KnowledgeQuestion convertToKnowledgeQuestion(KnowledgeQuestionDTO dto) {
+        KnowledgeQuestion question = new KnowledgeQuestion();
+        question.setChapter(dto.getChapter());
+        question.setContent(dto.getContent());
+        question.setCorrectAnswer(dto.getCorrectAnswer());
 
-//    TODO modify
+        // 处理难度枚举
+        try {
+            question.setDifficulty(Difficulty.valueOf(dto.getDifficulty().toLowerCase()));
+        } catch (IllegalArgumentException e) {
+            // 如果传入的难度值无效，设置默认值
+            question.setDifficulty(Difficulty.easy);
+        }
 
-//    private KnowledgeQuestion convertToKnowledgeQuestion(KnowledgeQuestionDTO dto) {
-//        KnowledgeQuestion question = new KnowledgeQuestion();
-//        question.setChapter(dto.getChapter());
-//        question.setQuestionType(QuestionType.valueOf(dto.getQuestionType()));
-//        question.setContent(dto.getContent());
-//        question.setCorrectAnswer(dto.getCorrectAnswer());
-//        question.setOptions(dto.getOptions() != null ? String.join(",", dto.getOptions()) : null);
-//
-//        question.setDifficulty(Difficulty.valueOf(dto.getDifficulty()));
-//        return question;
-//    }
-        private KnowledgeQuestion convertToKnowledgeQuestion(KnowledgeQuestionDTO dto) {
-            KnowledgeQuestion question = new KnowledgeQuestion();
-            question.setChapter(dto.getChapter());
-            question.setQuestionType(QuestionType.valueOf(dto.getQuestionType()));
-            question.setContent(dto.getContent());
-            question.setCorrectAnswer(dto.getCorrectAnswer());
-
-            // 将 options 数组转换为 JSON 格式的字符串
-            if (dto.getOptions() != null) {
-                try {
-                    ObjectMapper objectMapper = new ObjectMapper();
-                    String optionsJson = objectMapper.writeValueAsString(dto.getOptions());
-                    question.setOptions(optionsJson);  // 将 JSON 格式的字符串赋值给 options 字段
-                } catch (JsonProcessingException e) {
-                    e.printStackTrace();  // 处理序列化异常
-                }
+        // 处理问题范围枚举
+        try {
+            if (dto.getQuestionScope() != null) {
+                question.setQuestionScope(QuestionScope.valueOf(dto.getQuestionScope().toLowerCase()));
             } else {
-                question.setOptions(null);  // 如果 options 为 null，则将其设置为 null
+                question.setQuestionScope(QuestionScope.practice);
             }
+        } catch (IllegalArgumentException e) {
+            // 如果传入的问题范围值无效，设置默认值
+            question.setQuestionScope(QuestionScope.practice);
+        }
 
-            question.setDifficulty(Difficulty.valueOf(dto.getDifficulty()));
-            return question;
+        // 处理题目类型枚举
+        try {
+            question.setQuestionType(QuestionType.valueOf(dto.getQuestionType().toLowerCase()));
+        } catch (IllegalArgumentException e) {
+            // 如果传入的题目类型值无效，设置默认值
+            question.setQuestionType(QuestionType.choice);
+        }
+
+        // 处理选项JSON
+        ObjectMapper mapper = new ObjectMapper();
+        try {
+            question.setOptions(mapper.writeValueAsString(dto.getOptions()));
+        } catch (JsonProcessingException e) {
+            // 处理异常...
+            question.setOptions("[]");
+        }
+
+        return question;
     }
 
     private AlgorithmQuestionDTO convertToAlgorithmQuestionDTO(AlgorithmQuestion question) {
@@ -236,7 +247,8 @@ public class QuestionServiceImpl implements QuestionService {
         dto.setConstraints(question.getConstraints());
         dto.setChapter(question.getChapter());
         dto.setDifficulty(question.getDifficulty().toString());
-        System.out.println("convertToAlgorithmQuestionDTO   ----- AlgorithmQuestionDTO："+dto);
+        dto.setQuestionScope(question.getQuestionScope().toString());
+        System.out.println("convertToAlgorithmQuestionDTO   ----- AlgorithmQuestionDTO：" + dto);
         return dto;
     }
 
@@ -260,6 +272,19 @@ public class QuestionServiceImpl implements QuestionService {
             // 如果传入的难度值无效，设置默认值
             question.setDifficulty(Difficulty.easy);
         }
+
+        // 处理问题范围枚举
+        try {
+            if (questionDTO.getQuestionScope() != null) {
+                question.setQuestionScope(QuestionScope.valueOf(questionDTO.getQuestionScope().toLowerCase()));
+            } else {
+                question.setQuestionScope(QuestionScope.practice);
+            }
+        } catch (IllegalArgumentException e) {
+            // 如果传入的问题范围值无效，设置默认值
+            question.setQuestionScope(QuestionScope.practice);
+        }
+
         return question;
     }
 
@@ -288,4 +313,4 @@ public class QuestionServiceImpl implements QuestionService {
         question.setChapter(dto.getChapter());
         return question;
     }
-} 
+}

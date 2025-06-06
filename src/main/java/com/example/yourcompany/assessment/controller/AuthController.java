@@ -33,11 +33,8 @@ public class AuthController {
 
 
     private final JwtTokenUtil jwtTokenUtil;
-//
-//
     @PostMapping("/login")
     public ResponseEntity<ResponseEntityMyself1> login(@RequestBody AuthRequest authRequest) {
-//        System.out.println(authRequest.getUsername()+" "+authRequest.getPassword());
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(authRequest.getUsername(), authRequest.getPassword())
         );
@@ -49,15 +46,12 @@ public class AuthController {
 
         ResponseEntityMyself1  obj1=new ResponseEntityMyself1(new AuthResponse(jwt),obj2);
 
-
-//        return ResponseEntity.ok(new AuthResponse(jwt));
         return ResponseEntity.ok(obj1);
 
     }
 
     @PostMapping("/register")
     public ResponseEntity<UserDTO> createUser(@RequestBody User user) {
-//        System.out.println(23);
         return ResponseEntity.ok(userService.createUser(user));
     }
 }

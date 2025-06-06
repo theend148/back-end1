@@ -36,7 +36,11 @@ public class KnowledgeQuestion {
     @Enumerated(EnumType.STRING)
     private Difficulty difficulty = Difficulty.easy;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "question_scope", nullable = false)
+    private QuestionScope questionScope = QuestionScope.practice;
+
     @CreationTimestamp
     @Column(name = "created_at")
     private LocalDateTime createdAt;
-} 
+}

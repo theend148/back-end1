@@ -2,6 +2,7 @@ package com.example.yourcompany.assessment.controller;
 
 import com.example.yourcompany.assessment.dto.*;
 import com.example.yourcompany.assessment.entity.TestRecord;
+import com.example.yourcompany.assessment.repository.TestRecordRepository;
 import com.example.yourcompany.assessment.service.TestService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -15,6 +16,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class TestController {
     private final TestService testService;
+    private final TestRecordRepository testRecordRepository;
 
     @GetMapping("")
     public ResponseEntity<List<GetTestResponse>> GetTest(
@@ -35,7 +37,7 @@ public class TestController {
     }
 
     @PutMapping("/{testId}")
-    public ResponseEntity<Test1DTO> updateTest(@PathVariable Integer testId,@Valid @RequestBody Test1DTO testDTO) {
+    public ResponseEntity<Test1DTO> updateTest(@PathVariable Integer testId, @Valid @RequestBody Test1DTO testDTO) {
         return ResponseEntity.ok(testService.updateTest(testId, testDTO));
     }
 
@@ -55,27 +57,28 @@ public class TestController {
         return ResponseEntity.ok(testService.submitTest1(testId, testSubmit));
     }
 
-//    @GetMapping("/{testId}/result")
-//    public ResponseEntity<TestResultDTO> submitTest(
-//            @PathVariable Integer testId) {
-//        return ResponseEntity.ok(testService.submitTest(testId, testSubmit));
-//    }
-
+    // @GetMapping("/{testId}/result")
+    // public ResponseEntity<TestResultDTO> submitTest(
+    // @PathVariable Integer testId) {
+    // return ResponseEntity.ok(testService.submitTest(testId, testSubmit));
+    // }
 
     @GetMapping("/user/{userId}")
     public ResponseEntity<List<TestRecord>> getUserTestRecords(@PathVariable Integer userId) {
-        return ResponseEntity.ok(null);
+        List<TestRecord> records = testRecordRepository.findByUserId(userId);
+        return ResponseEntity.ok(records);
     }
 
-//    @GetMapping("/user/{userId}/chapter/{chapter}")
-//    public ResponseEntity<List<TestRecord>> getUserTestRecordsByChapter(
-//            @PathVariable Integer userId,
-//            @PathVariable String chapter) {
-//        return ResponseEntity.ok(testService.getUserTestRecordsByChapter(userId, chapter));
-//    }
+    // @GetMapping("/user/{userId}/chapter/{chapter}")
+    // public ResponseEntity<List<TestRecord>> getUserTestRecordsByChapter(
+    // @PathVariable Integer userId,
+    // @PathVariable String chapter) {
+    // return ResponseEntity.ok(testService.getUserTestRecordsByChapter(userId,
+    // chapter));
+    // }
 
     @GetMapping("/user/{userId}/average")
     public ResponseEntity<Double> getUserTestAverage(@PathVariable Integer userId) {
         return ResponseEntity.ok(testService.calculateUserTestAverage(userId));
     }
-} 
+}

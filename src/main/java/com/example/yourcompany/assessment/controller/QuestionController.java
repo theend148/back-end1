@@ -15,7 +15,7 @@ import java.util.List;
 @RequestMapping("/questions")
 @RequiredArgsConstructor
 public class QuestionController {
-//    TODO 知识点的编辑和删除功能没有
+    // TODO 知识点的编辑和删除功能没有
     private final QuestionService questionService;
 
     @GetMapping("/knowledge")
@@ -25,12 +25,12 @@ public class QuestionController {
     }
 
     @GetMapping("/knowledge/ids")
-    public ResponseEntity<List<KnowledgeQuestionDTO>> getKnowledgeQuestionsByIds(  @RequestParam List<Integer> ids) {
+    public ResponseEntity<List<KnowledgeQuestionDTO>> getKnowledgeQuestionsByIds(@RequestParam List<Integer> ids) {
         return ResponseEntity.ok(questionService.getKnowledgeQuestionsByIds(ids));
     }
 
     @GetMapping("/algorithm/ids")
-    public ResponseEntity<List<AlgorithmQuestionDTO>> getAlgorithmQuestionsByIds(  @RequestParam List<Integer> ids) {
+    public ResponseEntity<List<AlgorithmQuestionDTO>> getAlgorithmQuestionsByIds(@RequestParam List<Integer> ids) {
         return ResponseEntity.ok(questionService.getAlgorithmQuestionsByIds(ids));
     }
 
@@ -71,6 +71,7 @@ public class QuestionController {
 
         return ResponseEntity.ok(questionService.getKnowledgeQuestionsByChapter(chapter));
     }
+
     @GetMapping("/knowledge/chapter")
     public void myself1() {
     }
@@ -83,11 +84,11 @@ public class QuestionController {
     }
 
     @PostMapping("/knowledge")
-    public ResponseEntity<KnowledgeQuestionDTO> createKnowledgeQuestion(
-            @Valid @RequestBody KnowledgeQuestionDTO questionDTO) {
-
-        System.out.println(questionDTO);
-        System.out.println("createKnowledgeQuestion 调用");
+    public ResponseEntity<KnowledgeQuestionDTO> createKnowledgeQuestion(@RequestBody KnowledgeQuestionDTO questionDTO) {
+        System.out.println("接收到的知识点题目创建请求: " + questionDTO);
+        System.out.println("Content字段内容: " + questionDTO.getContent());
+        System.out.println(
+                "选项内容: " + (questionDTO.getOptions() != null ? String.join(", ", questionDTO.getOptions()) : "null"));
 
         return ResponseEntity.ok(questionService.createKnowledgeQuestion(questionDTO));
     }
@@ -98,7 +99,7 @@ public class QuestionController {
     }
 
     @GetMapping("/algorithm/chapter/{chapter}")
-    public ResponseEntity<List<AlgorithmQuestionDTO>> getAlgorithmQuestionsByChapter( @PathVariable String chapter) {
+    public ResponseEntity<List<AlgorithmQuestionDTO>> getAlgorithmQuestionsByChapter(@PathVariable String chapter) {
         System.out.println("getAlgorithmQuestionsByChapter 调用");
 
         return ResponseEntity.ok(questionService.getAlgorithmQuestionsByChapter(chapter));
@@ -119,4 +120,4 @@ public class QuestionController {
         System.out.println(questionDTO);
         return ResponseEntity.ok(questionService.createAlgorithmQuestion(questionDTO));
     }
-} 
+}

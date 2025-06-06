@@ -10,6 +10,7 @@ import java.util.List;
 @Repository
 public interface KnowledgeQuestionRepository extends JpaRepository<KnowledgeQuestion, Integer> {
     List<KnowledgeQuestion> findByChapter(String chapter);
+
     List<KnowledgeQuestion> findByDifficulty(String difficulty);
 
     KnowledgeQuestion getByQuestionId(Integer id);

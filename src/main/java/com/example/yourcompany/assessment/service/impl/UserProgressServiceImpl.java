@@ -315,6 +315,7 @@ public class UserProgressServiceImpl implements UserProgressService {
 
         // 获取用户的所有考试记录
         List<TestRecord> testRecords = testRecordRepository.findByUserId(userId);
+
         int totalTests = testRecords.size();
 
         // 平均正确率和最高正确率
@@ -502,28 +503,15 @@ public class UserProgressServiceImpl implements UserProgressService {
         // 查询用户在这段时间内的每日提交和正确率
         String submissionTrendSql = """
                 SELECT
-                    DATE(time) as date,
+                    DATE(submission_time) as date,
                     COUNT(*) as submissions,
-                    SUM(CASE WHEN is_successful THEN 1 ELSE 0 END) / COUNT(*) as correct_rate
-                FROM (
-                    SELECT
-                        submitted_at as time,
-                        is_correct as is_successful
-                    FROM
-                        practice_records
-                    WHERE
-                        user_id = ? AND submitted_at >= ?
-                    UNION ALL
-                    SELECT
-                        submission_time as time,
-                        CASE WHEN status = '100.00%' THEN true ELSE false END as is_successful
-                    FROM
-                        submission_records
-                    WHERE
-                        user_id = ? AND submission_time >= ?
-                ) as submissions
+                    SUM(CASE WHEN status = '100.00%' THEN 1 ELSE 0 END) / COUNT(*) as correct_rate
+                FROM
+                    submission_records
+                WHERE
+                    user_id = ? AND submission_time >= ?
                 GROUP BY
-                    DATE(time)
+                    DATE(submission_time)
                 ORDER BY
                     date
                 """;
@@ -531,8 +519,6 @@ public class UserProgressServiceImpl implements UserProgressService {
         // 查询每日提交数据
         List<Map<String, Object>> submissionData = jdbcTemplate.queryForList(
                 submissionTrendSql,
-                userId,
-                thirtyDaysAgo.atStartOfDay(),
                 userId,
                 thirtyDaysAgo.atStartOfDay());
 

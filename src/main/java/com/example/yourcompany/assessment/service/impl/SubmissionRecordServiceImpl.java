@@ -43,42 +43,40 @@ public class SubmissionRecordServiceImpl implements SubmissionRecordService {
             "javascript", 63  // JavaScript (Node.js 12.14.0)
     );
 //    @Value("${judge0.api.url}")
-    private String judge0ApiUrl="http://192.168.254.137:2358";  // 配置文件中设置: judge0.api.url=http://192.168.254.137:2358
+// 配置文件中设置: judge0.api.url=http://192.168.254.137:2358
+
+    private String judge0ApiUrl="http://192.168.254.137:2358"; 
     @Transactional
     @Override
     public SubmissionRecordDTO createSubmissionRecord(CodeSubmitRequestDTO  submissionDTO) {
         System.out.println("开始处理提交："+submissionDTO);
-
         // 1. 获取题目和用户
         AlgorithmQuestion question = algorithmQuestionRepository.findById(submissionDTO.getQuestionId())
                 .orElseThrow(() -> new RuntimeException("题目不存在"));
-
         User user = userRepository.findById(submissionDTO.getUserId())
                 .orElseThrow(() -> new RuntimeException("用户不存在"));
 
-        // 2. 获取题目的所有测试用例
+        //  获取题目的所有测试用例
         List<TestCase> testCases = testCaseRepository.findByQuestionQuestionId(submissionDTO.getQuestionId());
         if (testCases.isEmpty()) {
             throw new RuntimeException("题目没有测试用例");
         }
         System.out.println("testCases:"+testCases);
-        // 3. 获取对应的judge0语言ID
+        //  获取对应的judge0语言ID
         Integer languageId = LANGUAGE_MAP.get(submissionDTO.getLanguage().toLowerCase());
         if (languageId == null) {
             throw new RuntimeException("不支持的编程语言: " + submissionDTO.getLanguage());
         }
         System.out.println("languageId:"+languageId);
-        // 4. 执行判题
+        //  执行判题
         List<JudgeResult> results = new ArrayList<>();
         int passedCount = 0;
-
         for (TestCase testCase : testCases) {
             JudgeRequest judgeRequest = new JudgeRequest();
             judgeRequest.setSourceCode(submissionDTO.getCode());
             judgeRequest.setLanguageId(languageId);
             judgeRequest.setStdin(testCase.getInputData());
             judgeRequest.setExpectedOutput(testCase.getOutputData());
-
             try {
                 JudgeResult result = submitToJudge0(judgeRequest);
                 results.add(result);

@@ -264,13 +264,10 @@ public class TestServiceImpl implements TestService {
 
         // 随机选择 easy ID
         selectedIds.addAll(selectRandomIds(easyIds, easyCount));
-
         // 随机选择 medium ID
         selectedIds.addAll(selectRandomIds(mediumIds, mediumCount));
-
         // 随机选择 hard ID
         selectedIds.addAll(selectRandomIds(hardIds, hardCount));
-
         for(int i=0;i<selectedIds.size();i++){
             TestQuestions obj=new TestQuestions();
             obj.setTestId(testId);

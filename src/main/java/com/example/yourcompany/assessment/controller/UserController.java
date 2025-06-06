@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 //import javax.validation.Valid;
 import javax.validation.Valid;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/users")
@@ -46,4 +47,14 @@ public class UserController {
         userService.deleteUser(id);
         return ResponseEntity.ok().build();
     }
-} 
+
+    @PostMapping("/{id}/role")
+    public ResponseEntity<UserDTO> updateUserRole(@PathVariable Integer id, @RequestBody Map<String, String> payload) {
+        String role = payload.get("role");
+        System.out.println("role:" + role);
+        if (role == null) {
+            return ResponseEntity.badRequest().build();
+        }
+        return ResponseEntity.ok(userService.updateUserRole(id, role));
+    }
+}

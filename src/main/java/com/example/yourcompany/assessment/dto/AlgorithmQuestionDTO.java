@@ -14,6 +14,7 @@ public class AlgorithmQuestionDTO {
     private String sampleOutput;
 
     private String difficulty;
+    private String questionScope;
 
     private String constraints;
-} 
+}

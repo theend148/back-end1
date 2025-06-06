@@ -4,6 +4,7 @@ import com.example.yourcompany.assessment.repository.UserRepository;
 import com.example.yourcompany.assessment.service.UserService;
 import com.example.yourcompany.assessment.dto.UserDTO;
 import com.example.yourcompany.assessment.entity.User;
+import com.example.yourcompany.assessment.entity.UserRole;
 import com.sun.xml.bind.v2.TODO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -21,9 +22,9 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserDTO createUser(User user) {
-//        TODO 这里是密码加密
+        // TODO 这里是密码加密
         user.setPassword(passwordEncoder.encode(user.getPassword()));
-//        user.setPassword(user.getPassword());
+        // user.setPassword(user.getPassword());
 
         return convertToDTO(userRepository.save(user));
     }
@@ -68,6 +69,20 @@ public class UserServiceImpl implements UserService {
         return userRepository.existsByEmail(email);
     }
 
+    @Override
+    public UserDTO updateUserRole(Integer userId, String role) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
+
+        try {
+            UserRole userRole = UserRole.valueOf(role);
+            user.setRole(userRole);
+            return convertToDTO(userRepository.save(user));
+        } catch (IllegalArgumentException e) {
+            throw new RuntimeException("Invalid role: " + role);
+        }
+    }
+
     private UserDTO convertToDTO(User user) {
         UserDTO dto = new UserDTO();
         dto.setUserId(user.getUserId());
@@ -76,4 +91,4 @@ public class UserServiceImpl implements UserService {
         dto.setRole(user.getRole().toString());
         return dto;
     }
-} 
+}

@@ -33,22 +33,7 @@ public class TestRecord {
 
     private Integer totalTime;
 
-    public TestRecord(Integer testId, Integer userId, LocalDateTime startTime, Integer totalTime, Integer totalQuestions, Integer correctCount, Integer easyTotal, Integer easyCorrect, Integer mediumTotal, Integer mediumCorrect, Integer hardTotal, Integer hardCorrect, String status) {
-        this.testId = testId;
-        this.userId = userId;
-        this.startTime = startTime;
-        this.totalTime = totalTime;
-        this.totalQuestions = totalQuestions;
-        this.correctCount = correctCount;
-        this.easyTotal = easyTotal;
-        this.easyCorrect = easyCorrect;
-        this.mediumTotal = mediumTotal;
-        this.mediumCorrect = mediumCorrect;
-        this.hardTotal = hardTotal;
-        this.hardCorrect = hardCorrect;
-        this.status = status;
-    }
-
+   
     @Column(name = "total_questions")
 
     private Integer totalQuestions;
@@ -92,4 +77,21 @@ public class TestRecord {
         this.hardCorrect = hardCorrect;
         this.status = status;
     }
+
+    public TestRecord(Integer testId, Integer userId, LocalDateTime startTime, Integer totalTime, Integer totalQuestions, Integer correctCount, Integer easyTotal, Integer easyCorrect, Integer mediumTotal, Integer mediumCorrect, Integer hardTotal, Integer hardCorrect, String status) {
+        this.testId = testId;
+        this.userId = userId;
+        this.startTime = startTime;
+        this.totalTime = totalTime;
+        this.totalQuestions = totalQuestions;
+        this.correctCount = correctCount;
+        this.easyTotal = easyTotal;
+        this.easyCorrect = easyCorrect;
+        this.mediumTotal = mediumTotal;
+        this.mediumCorrect = mediumCorrect;
+        this.hardTotal = hardTotal;
+        this.hardCorrect = hardCorrect;
+        this.status = status;
+    }
+
 }

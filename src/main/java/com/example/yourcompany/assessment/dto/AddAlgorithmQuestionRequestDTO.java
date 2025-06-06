@@ -20,6 +20,7 @@ public class AddAlgorithmQuestionRequestDTO {
     private String sampleInput;
     private String sampleOutput;
     private String difficulty;
+    private String questionScope;
     private String constraints;
     private List<TestCase> testCases;
 
