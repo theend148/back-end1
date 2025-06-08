@@ -19,10 +19,9 @@ public class StatisticsController {
     @GetMapping("/overview")
     public ResponseEntity<Map<String, Object>> getOverview() {
         return ResponseEntity.ok(Map.of(
-            "totalUsers", statisticsService.getTotalUsers(),
-            "totalQuestions", statisticsService.getTotalQuestions(),
-            "totalSubmissions", statisticsService.getTotalSubmissions()
-        ));
+                "totalUsers", statisticsService.getTotalUsers(),
+                "totalQuestions", statisticsService.getTotalQuestions(),
+                "totalSubmissions", statisticsService.getTotalSubmissions()));
     }
 
     @GetMapping("/user-activity")

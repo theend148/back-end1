@@ -6,9 +6,11 @@ package com.example.yourcompany.assessment.repository;
  **/
 import com.example.yourcompany.assessment.entity.TestCase;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -25,6 +27,8 @@ public interface TestCaseRepository extends JpaRepository<TestCase, Integer> {
     List<TestCase> findByQuestionQuestionIdAndIsPublicFalse(Integer questionId);
 
     // 删除题目的所有测试用例
+    @Modifying
+    @Transactional
     void deleteByQuestionQuestionId(Integer questionId);
 
     // 统计题目的测试用例数量

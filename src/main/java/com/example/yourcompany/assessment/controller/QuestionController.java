@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.*;
 //import javax.validation.Valid;
 import javax.validation.Valid;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/questions")
@@ -119,5 +120,87 @@ public class QuestionController {
         System.out.println("createAlgorithmQuestion doing --");
         System.out.println(questionDTO);
         return ResponseEntity.ok(questionService.createAlgorithmQuestion(questionDTO));
+    }
+
+    @PutMapping("/knowledge/{id}")
+    public ResponseEntity<KnowledgeQuestionDTO> updateKnowledgeQuestion(
+            @PathVariable Integer id,
+            @Valid @RequestBody KnowledgeQuestionDTO questionDTO) {
+        System.out.println("更新知识点题目: ID=" + id);
+        System.out.println(questionDTO);
+        return ResponseEntity.ok(questionService.updateKnowledgeQuestion(id, questionDTO));
+    }
+
+    @PutMapping("/algorithm/{id}")
+    public ResponseEntity<AlgorithmQuestionDTO> updateAlgorithmQuestion(
+            @PathVariable Integer id,
+            @Valid @RequestBody AddAlgorithmQuestionRequestDTO questionDTO) {
+        System.out.println("更新算法题目: ID=" + id);
+        System.out.println(questionDTO);
+        return ResponseEntity.ok(questionService.updateAlgorithmQuestion(id, questionDTO));
+    }
+
+    @DeleteMapping("/knowledge/{id}")
+    public ResponseEntity<?> deleteKnowledgeQuestion(@PathVariable Integer id) {
+        try {
+            System.out.println("删除知识点题目: ID=" + id);
+            questionService.deleteKnowledgeQuestion(id);
+            return ResponseEntity.noContent().build();
+        } catch (Exception e) {
+            System.err.println("删除知识点题目失败: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.status(500)
+                    .body(Map.of("message", "删除知识点题目失败: " + e.getMessage()));
+        }
+    }
+
+    @DeleteMapping("/algorithm/{id}")
+    public ResponseEntity<?> deleteAlgorithmQuestion(@PathVariable Integer id) {
+        try {
+            System.out.println("删除算法题目: ID=" + id);
+            questionService.deleteAlgorithmQuestion(id);
+            return ResponseEntity.noContent().build();
+        } catch (Exception e) {
+            System.err.println("删除算法题目失败: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.status(500)
+                    .body(Map.of("message", "删除算法题目失败: " + e.getMessage()));
+        }
+    }
+
+    @GetMapping("/algorithm/{id}/testcases")
+    public ResponseEntity<List<TestCaseDTO>> getAlgorithmQuestionTestCases(@PathVariable Integer id) {
+        System.out.println("获取算法题目测试用例: ID=" + id);
+        return ResponseEntity.ok(questionService.getTestCasesByQuestionId(id));
+    }
+
+    @PutMapping("/chapters/knowledge/{id}")
+    public ResponseEntity<KnowledgeChapterDTO> updateKnowledgeChapter(
+            @PathVariable Integer id,
+            @Valid @RequestBody KnowledgeChapterDTO chapterDTO) {
+        System.out.println("更新知识点章节: ID=" + id);
+        return ResponseEntity.ok(questionService.updateKnowledgeChapter(id, chapterDTO));
+    }
+
+    @PutMapping("/chapters/algorithm/{id}")
+    public ResponseEntity<AlgorithmChapterDTO> updateAlgorithmChapter(
+            @PathVariable Integer id,
+            @Valid @RequestBody AlgorithmChapterDTO chapterDTO) {
+        System.out.println("更新算法章节: ID=" + id);
+        return ResponseEntity.ok(questionService.updateAlgorithmChapter(id, chapterDTO));
+    }
+
+    @DeleteMapping("/chapters/knowledge/{id}")
+    public ResponseEntity<Void> deleteKnowledgeChapter(@PathVariable Integer id) {
+        System.out.println("删除知识点章节: ID=" + id);
+        questionService.deleteKnowledgeChapter(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @DeleteMapping("/chapters/algorithm/{id}")
+    public ResponseEntity<Void> deleteAlgorithmChapter(@PathVariable Integer id) {
+        System.out.println("删除算法章节: ID=" + id);
+        questionService.deleteAlgorithmChapter(id);
+        return ResponseEntity.noContent().build();
     }
 }

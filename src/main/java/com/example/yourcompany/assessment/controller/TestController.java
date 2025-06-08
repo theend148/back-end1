@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/test")
@@ -39,6 +40,20 @@ public class TestController {
     @PutMapping("/{testId}")
     public ResponseEntity<Test1DTO> updateTest(@PathVariable Integer testId, @Valid @RequestBody Test1DTO testDTO) {
         return ResponseEntity.ok(testService.updateTest(testId, testDTO));
+    }
+
+    @DeleteMapping("/{testId}")
+    public ResponseEntity<?> deleteTest(@PathVariable Integer testId) {
+        try {
+            System.out.println("删除试卷: ID=" + testId);
+            testService.deleteTest(testId);
+            return ResponseEntity.noContent().build();
+        } catch (Exception e) {
+            System.err.println("删除试卷失败: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.status(500)
+                    .body(Map.of("message", "删除试卷失败: " + e.getMessage()));
+        }
     }
 
     @PostMapping("/{testId}/submit")

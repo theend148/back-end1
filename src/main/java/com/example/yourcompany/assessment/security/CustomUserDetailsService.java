@@ -17,27 +17,25 @@ import java.util.Collections;
 public class CustomUserDetailsService implements UserDetailsService {
     private final UserRepository userRepository;
 
-//    private final PasswordEncoder passwordEncoder;
+    // private final PasswordEncoder passwordEncoder;
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        System.out.println("loadUserByUsername 方法调用"+this.getClass().getPackageName());
+        System.out.println("loadUserByUsername 方法调用" + this.getClass().getPackageName());
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
-        if(user!=null) {
+        if (user != null) {
             System.out.println("user !=null");
-            System.out.println("username "+user.getUsername());
-//            user.setPassword(passwordEncoder.encode(user.getPassword()));
-            System.out.println("userpwd "+user.getPassword());
+            System.out.println("username " + user.getUsername());
+            // user.setPassword(passwordEncoder.encode(user.getPassword()));
+            System.out.println("userpwd " + user.getPassword());
 
-        }
-        else{
+        } else {
             System.out.println("user=null");
         }
         return new org.springframework.security.core.userdetails.User(
                 user.getUsername(),
                 user.getPassword(),
-                Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + user.getRole().name()))
-        );
+                Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + user.getRole().name())));
     }
-} 
+}

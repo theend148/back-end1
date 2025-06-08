@@ -9,6 +9,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sun.xml.bind.v2.TODO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -21,10 +22,10 @@ public class QuestionServiceImpl implements QuestionService {
     private final KnowledgeQuestionRepository knowledgeQuestionRepository;
     private final AlgorithmQuestionRepository algorithmQuestionRepository;
     private final TestCaseRepository testCaseRepository;
-
     private final AlgorithmChapterRepository algorithmChapterRepository;
-
     private final KnowledgeChapterRepository knowledgeChapterRepository;
+    private final SubmissionRecordRepository submissionRecordRepository;
+    private final TestAnswerDetailRepository testAnswerDetailRepository;
 
     @Override
     public List<KnowledgeQuestionDTO> getAllKnowledgeQuestions() {
@@ -153,6 +154,234 @@ public class QuestionServiceImpl implements QuestionService {
                     .ifPresent(ans::add); // 如果存在，添加到结果列表中
         }
         return ans;
+    }
+
+    @Override
+    public KnowledgeQuestionDTO updateKnowledgeQuestion(Integer id, KnowledgeQuestionDTO questionDTO) {
+        // 检查题目是否存在
+        KnowledgeQuestion existingQuestion = knowledgeQuestionRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("知识点题目不存在: " + id));
+
+        // 更新题目信息
+        existingQuestion.setChapter(questionDTO.getChapter());
+        existingQuestion.setContent(questionDTO.getContent());
+        existingQuestion.setCorrectAnswer(questionDTO.getCorrectAnswer());
+
+        // 处理难度枚举
+        try {
+            existingQuestion.setDifficulty(Difficulty.valueOf(questionDTO.getDifficulty().toLowerCase()));
+        } catch (IllegalArgumentException e) {
+            existingQuestion.setDifficulty(Difficulty.easy);
+        }
+
+        // 处理问题范围枚举
+        try {
+            if (questionDTO.getQuestionScope() != null) {
+                existingQuestion.setQuestionScope(QuestionScope.valueOf(questionDTO.getQuestionScope().toLowerCase()));
+            } else {
+                existingQuestion.setQuestionScope(QuestionScope.practice);
+            }
+        } catch (IllegalArgumentException e) {
+            existingQuestion.setQuestionScope(QuestionScope.practice);
+        }
+
+        // 处理题目类型枚举
+        try {
+            existingQuestion.setQuestionType(QuestionType.valueOf(questionDTO.getQuestionType().toLowerCase()));
+        } catch (IllegalArgumentException e) {
+            existingQuestion.setQuestionType(QuestionType.choice);
+        }
+
+        // 处理选项JSON
+        ObjectMapper mapper = new ObjectMapper();
+        try {
+            existingQuestion.setOptions(mapper.writeValueAsString(questionDTO.getOptions()));
+        } catch (JsonProcessingException e) {
+            existingQuestion.setOptions("[]");
+        }
+
+        // 保存更新后的题目
+        KnowledgeQuestion updatedQuestion = knowledgeQuestionRepository.save(existingQuestion);
+        return convertToKnowledgeQuestionDTO(updatedQuestion);
+    }
+
+    @Override
+    @Transactional
+    public AlgorithmQuestionDTO updateAlgorithmQuestion(Integer id, AddAlgorithmQuestionRequestDTO questionDTO) {
+        // 检查题目是否存在
+        AlgorithmQuestion existingQuestion = algorithmQuestionRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("算法题目不存在: " + id));
+
+        // 打印接收到的数据，帮助调试
+        System.out.println("更新算法题目: ID=" + id);
+        System.out
+                .println("接收到的测试用例数量: " + (questionDTO.getTestCases() != null ? questionDTO.getTestCases().size() : 0));
+
+        // 更新题目基本信息
+        existingQuestion.setChapter(questionDTO.getChapter());
+        existingQuestion.setTitle(questionDTO.getTitle());
+        existingQuestion.setDescription(questionDTO.getDescription());
+        existingQuestion.setInputFormat(questionDTO.getInputFormat());
+        existingQuestion.setOutputFormat(questionDTO.getOutputFormat());
+        existingQuestion.setSampleInput(questionDTO.getSampleInput());
+        existingQuestion.setSampleOutput(questionDTO.getSampleOutput());
+        existingQuestion.setConstraints(questionDTO.getConstraints());
+
+        // 处理难度枚举
+        try {
+            existingQuestion.setDifficulty(Difficulty.valueOf(questionDTO.getDifficulty().toLowerCase()));
+        } catch (IllegalArgumentException e) {
+            existingQuestion.setDifficulty(Difficulty.easy);
+        }
+
+        // 处理问题范围枚举
+        try {
+            if (questionDTO.getQuestionScope() != null) {
+                existingQuestion.setQuestionScope(QuestionScope.valueOf(questionDTO.getQuestionScope().toLowerCase()));
+            } else {
+                existingQuestion.setQuestionScope(QuestionScope.practice);
+            }
+        } catch (IllegalArgumentException e) {
+            existingQuestion.setQuestionScope(QuestionScope.practice);
+        }
+
+        // 保存更新后的题目
+        AlgorithmQuestion updatedQuestion = algorithmQuestionRepository.save(existingQuestion);
+
+        // 处理测试用例
+        if (questionDTO.getTestCases() != null && !questionDTO.getTestCases().isEmpty()) {
+            System.out.println("更新测试用例...");
+            // 删除旧的测试用例
+            testCaseRepository.deleteByQuestionQuestionId(id);
+
+            // 添加新的测试用例
+            List<TestCase> testCases = questionDTO.getTestCases().stream()
+                    .map(testCaseDTO -> {
+                        TestCase testCase = new TestCase();
+                        testCase.setQuestion(updatedQuestion);
+                        testCase.setInputData(testCaseDTO.getInput());
+                        testCase.setOutputData(testCaseDTO.getOutput());
+                        testCase.setPublic(testCaseDTO.isPublic());
+                        return testCase;
+                    })
+                    .collect(Collectors.toList());
+            testCaseRepository.saveAll(testCases);
+            System.out.println("保存了 " + testCases.size() + " 个测试用例");
+        } else {
+            System.out.println("没有测试用例需要更新");
+        }
+
+        return convertToAlgorithmQuestionDTO(updatedQuestion);
+    }
+
+    @Override
+    @Transactional
+    public void deleteKnowledgeQuestion(Integer id) {
+        try {
+            // 检查题目是否存在
+            if (!knowledgeQuestionRepository.existsById(id)) {
+                System.out.println("知识点题目不存在: " + id);
+                return;
+            }
+
+            System.out.println("开始删除知识点题目: " + id);
+            knowledgeQuestionRepository.deleteById(id);
+            System.out.println("知识点题目删除完成: " + id);
+        } catch (Exception e) {
+            System.err.println("删除知识点题目时发生错误: " + e.getMessage());
+            e.printStackTrace();
+            throw e; // 重新抛出异常以便事务回滚
+        }
+    }
+
+    @Override
+    @Transactional
+    public void deleteAlgorithmQuestion(Integer id) {
+        try {
+            // 检查题目是否存在
+            if (!algorithmQuestionRepository.existsById(id)) {
+                System.out.println("算法题不存在: " + id);
+                return;
+            }
+
+            // 先删除相关的TestAnswerDetail记录
+            System.out.println("开始删除算法题的答题记录: " + id);
+            testAnswerDetailRepository.deleteByQuestionId(id);
+            System.out.println("答题记录删除完成");
+
+            // 再删除相关的提交记录
+            System.out.println("开始删除算法题的提交记录: " + id);
+            submissionRecordRepository.deleteByQuestionQuestionId(id);
+            System.out.println("提交记录删除完成");
+
+            System.out.println("开始删除算法题的测试用例: " + id);
+            // 再删除相关的测试用例
+            testCaseRepository.deleteByQuestionQuestionId(id);
+            System.out.println("测试用例删除完成，开始删除算法题: " + id);
+
+            // 最后删除题目
+            algorithmQuestionRepository.deleteById(id);
+            System.out.println("算法题删除完成: " + id);
+        } catch (Exception e) {
+            System.err.println("删除算法题时发生错误: " + e.getMessage());
+            e.printStackTrace();
+            throw e; // 重新抛出异常以便事务回滚
+        }
+    }
+
+    @Override
+    public KnowledgeChapterDTO updateKnowledgeChapter(Integer id, KnowledgeChapterDTO chapterDTO) {
+        // 检查章节是否存在
+        KnowledgeChapter existingChapter = knowledgeChapterRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("知识点章节不存在: " + id));
+
+        // 更新章节信息
+        existingChapter.setChapter(chapterDTO.getChapter());
+
+        // 保存更新后的章节
+        KnowledgeChapter updatedChapter = knowledgeChapterRepository.save(existingChapter);
+        return convertToKnowledgeChapterDTO(updatedChapter);
+    }
+
+    @Override
+    public AlgorithmChapterDTO updateAlgorithmChapter(Integer id, AlgorithmChapterDTO chapterDTO) {
+        // 检查章节是否存在
+        AlgorithmChapter existingChapter = algorithmChapterRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("算法章节不存在: " + id));
+
+        // 更新章节信息
+        existingChapter.setChapter(chapterDTO.getChapter());
+
+        // 保存更新后的章节
+        AlgorithmChapter updatedChapter = algorithmChapterRepository.save(existingChapter);
+        return convertToAlgorithmChapterDTO(updatedChapter);
+    }
+
+    @Override
+    public void deleteKnowledgeChapter(Integer id) {
+        knowledgeChapterRepository.deleteById(id);
+    }
+
+    @Override
+    public void deleteAlgorithmChapter(Integer id) {
+        algorithmChapterRepository.deleteById(id);
+    }
+
+    @Override
+    public List<TestCaseDTO> getTestCasesByQuestionId(Integer questionId) {
+        List<TestCase> testCases = testCaseRepository.findByQuestionQuestionId(questionId);
+        return testCases.stream()
+                .map(this::convertToTestCaseDTO)
+                .collect(Collectors.toList());
+    }
+
+    private TestCaseDTO convertToTestCaseDTO(TestCase testCase) {
+        TestCaseDTO dto = new TestCaseDTO();
+        dto.setCaseId(testCase.getCaseId());
+        dto.setInputData(testCase.getInputData());
+        dto.setOutputData(testCase.getOutputData());
+        dto.setPublic(testCase.isPublic());
+        return dto;
     }
 
     private KnowledgeQuestionDTO convertToKnowledgeQuestionDTO(KnowledgeQuestion question) {

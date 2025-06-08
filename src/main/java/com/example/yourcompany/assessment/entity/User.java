@@ -37,4 +37,11 @@ public class User {
     @UpdateTimestamp
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+    
+    // 用于密码更新的临时字段，不存储到数据库
+    @Transient
+    private String oldPassword;
+    
+    @Transient
+    private String newPassword;
 } 

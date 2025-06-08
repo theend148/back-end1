@@ -3,8 +3,10 @@ package com.example.yourcompany.assessment.repository;
 import com.example.yourcompany.assessment.entity.SubmissionRecord;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -14,17 +16,20 @@ import java.util.List;
  **/
 public interface SubmissionRecordRepository extends JpaRepository<SubmissionRecord, Integer> {
 
-//    List<SubmissionRecord> findByUserId(Integer userId);
+    // List<SubmissionRecord> findByUserId(Integer userId);
     @Query("SELECT s FROM SubmissionRecord s WHERE s.question.questionId = :questionId ORDER BY s.submissionTime DESC")
     List<SubmissionRecord> findByQuestionQuestionId(@Param("questionId") Integer questionId);
 
-
     List<SubmissionRecord> findByUserUserIdAndQuestionQuestionId(Integer userId, Integer questionId);
 
-//    @EntityGraph(attributePaths = {"sourceCode"})
-//    List<SubmissionRecord> findByQuestionQuestionId(Integer questionId);
-//    List<SubmissionRecord> findByQuestionQuestionId(Integer questionId);
+    @Modifying
+    @Transactional
+    @Query("DELETE FROM SubmissionRecord s WHERE s.question.questionId = :questionId")
+    void deleteByQuestionQuestionId(@Param("questionId") Integer questionId);
 
-//    SubmissionRecord findById(Integer id);
+    // @EntityGraph(attributePaths = {"sourceCode"})
+    // List<SubmissionRecord> findByQuestionQuestionId(Integer questionId);
+    // List<SubmissionRecord> findByQuestionQuestionId(Integer questionId);
+
+    // SubmissionRecord findById(Integer id);
 }
-

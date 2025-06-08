@@ -30,17 +30,13 @@ public class TestServiceImpl implements TestService {
 
     private final SubmissionRecordService submissionRecordService;
 
-
     private final KnowledgeQuestionRepository knowledgeQuestionRepository;
     private final AlgorithmQuestionRepository algorithmQuestionRepository;
 
-    private  final TestRecordRepository testRecordRepository;
-    private  final TestAnswerDetailRepository testAnswerDetailRepository;
-
-
+    private final TestRecordRepository testRecordRepository;
+    private final TestAnswerDetailRepository testAnswerDetailRepository;
 
     private final TestQuestionRepository testQuestionRepository;
-
 
     @Override
     public double calculateUserTestAverage(Integer userId) {
@@ -53,19 +49,17 @@ public class TestServiceImpl implements TestService {
         return 0.0;
     }
 
-
-
     @Override
     public GetTestResponse getTestById(Integer testId) {
         Optional<Test1> optionalTest1 = testRepository.findById(testId);
         if (optionalTest1.isPresent()) {
             Test1 test11 = optionalTest1.get();
-            List<Integer> questionsIds=new ArrayList<>();
-            List<TestQuestions>tmp=testQuestionRepository.getByTestId(test11.getTestId());
-            for(TestQuestions questions:tmp){
+            List<Integer> questionsIds = new ArrayList<>();
+            List<TestQuestions> tmp = testQuestionRepository.getByTestId(test11.getTestId());
+            for (TestQuestions questions : tmp) {
                 questionsIds.add(questions.getQuestionId());
             }
-            GetTestResponse ans=new GetTestResponse(test11,questionsIds,test11.getGenerateType());
+            GetTestResponse ans = new GetTestResponse(test11, questionsIds, test11.getGenerateType());
             return ans;
             // 进一步处理 test1
         } else {
@@ -73,27 +67,27 @@ public class TestServiceImpl implements TestService {
         }
     }
 
-    //    TODO 待优化
+    // TODO 待优化
     @Override
     public List<GetTestResponse> getAllTests() {
-        List<Test1> test1=testRepository.findAll();
-        List<GetTestResponse>ans=new ArrayList<>();
+        List<Test1> test1 = testRepository.findAll();
+        List<GetTestResponse> ans = new ArrayList<>();
 
-        for(Test1 test11 : test1){
-            List<Integer> questionsIds=new ArrayList<>();
-            List<TestQuestions>tmp=testQuestionRepository.getByTestId(test11.getTestId());
-            for(TestQuestions questions:tmp){
+        for (Test1 test11 : test1) {
+            List<Integer> questionsIds = new ArrayList<>();
+            List<TestQuestions> tmp = testQuestionRepository.getByTestId(test11.getTestId());
+            for (TestQuestions questions : tmp) {
                 questionsIds.add(questions.getQuestionId());
             }
-            ans.add(new GetTestResponse(test11,questionsIds,test11.getGenerateType()));
+            ans.add(new GetTestResponse(test11, questionsIds, test11.getGenerateType()));
         }
 
         return ans;
     }
 
     @Override
-    public Test1DTO updateTest(Integer testId,Test1DTO testDTO) {
-        Test1 obj=convertToTest(testDTO);
+    public Test1DTO updateTest(Integer testId, Test1DTO testDTO) {
+        Test1 obj = convertToTest(testDTO);
         obj.setTestId(testId);
         return convertToTest1DTO(testRepository.save(obj));
     }
@@ -102,7 +96,7 @@ public class TestServiceImpl implements TestService {
         return totalQuestions == 0 ? 0 : (float) correctAnswers / totalQuestions * 100;
     }
 
-    private Test1DTO convertToTest1DTO(Test1 dto){
+    private Test1DTO convertToTest1DTO(Test1 dto) {
         Test1DTO obj = new Test1DTO();
         obj.setTestId(dto.getTestId());
         obj.setTitle(dto.getTitle());
@@ -121,7 +115,7 @@ public class TestServiceImpl implements TestService {
 
     private Test1 convertToTest(Test1DTO dto) {
         Test1 obj = new Test1();
-//        obj.setTestId(dto.getTestId());
+        // obj.setTestId(dto.getTestId());
         obj.setTitle(dto.getTitle());
         obj.setDescription(dto.getDescription());
         obj.setDuration(dto.getDuration());
@@ -136,7 +130,7 @@ public class TestServiceImpl implements TestService {
         return obj;
     }
 
-    //-----
+    // -----
     @Override
     public Test1DTO createTest(CreateTestRequest request) {
         Test1 test = new Test1();
@@ -152,43 +146,40 @@ public class TestServiceImpl implements TestService {
                 request.getMediumQuestionsNum() +
                 request.getHardQuestionsNum());
         test.setGenerateType(request.getIsAutoGenerate());
-        Test1 test1=testRepository.save(test);
+        Test1 test1 = testRepository.save(test);
         System.out.println(test1);
 
-        Test1DTO ans=convertToTest1DTO(test1);
+        Test1DTO ans = convertToTest1DTO(test1);
 
-        if (request.getIsAutoGenerate()&&request.getQuestionType() == QuestionCategory.knowledge) {
+        if (request.getIsAutoGenerate() && request.getQuestionType() == QuestionCategory.knowledge) {
             autoSelectKnowledgeQuestions(
                     request.getChapter(),
                     request.getEasyQuestionsNum(),
                     request.getMediumQuestionsNum(),
-                    request.getHardQuestionsNum(), test1.getTestId()
-            );
+                    request.getHardQuestionsNum(), test1.getTestId());
         }
-        if (request.getIsAutoGenerate()&&request.getQuestionType() == QuestionCategory.algorithm) {
+        if (request.getIsAutoGenerate() && request.getQuestionType() == QuestionCategory.algorithm) {
             autoSelectAlgorithmQuestions(
                     request.getChapter(),
                     request.getEasyQuestionsNum(),
                     request.getMediumQuestionsNum(),
-                    request.getHardQuestionsNum(), test1.getTestId()
-            );
+                    request.getHardQuestionsNum(), test1.getTestId());
         }
-        if (!request.getIsAutoGenerate()&&request.getQuestionType() == QuestionCategory.knowledge) {
+        if (!request.getIsAutoGenerate() && request.getQuestionType() == QuestionCategory.knowledge) {
             notAutoSelectKnowledgeQuestions(
-                    request.getChapter(),request.getQuestionIds(), test1.getTestId());
+                    request.getChapter(), request.getQuestionIds(), test1.getTestId());
         }
-        if (!request.getIsAutoGenerate()&&request.getQuestionType() == QuestionCategory.algorithm) {
-            notAutoSelectAlgorithmQuestions( request.getChapter(),request.getQuestionIds(), test1.getTestId());
+        if (!request.getIsAutoGenerate() && request.getQuestionType() == QuestionCategory.algorithm) {
+            notAutoSelectAlgorithmQuestions(request.getChapter(), request.getQuestionIds(), test1.getTestId());
         }
         return ans;
 
-
     }
-//
+    //
 
     private void autoSelectKnowledgeQuestions(String chapter,
-                                               int easyCount, int mediumCount, int hardCount,Integer testId) {
-        List<KnowledgeQuestion> questions =knowledgeQuestionRepository.findByChapter(chapter);
+            int easyCount, int mediumCount, int hardCount, Integer testId) {
+        List<KnowledgeQuestion> questions = knowledgeQuestionRepository.findByChapter(chapter);
 
         Map<String, List<KnowledgeQuestion>> groupedByDifficulty = questions.stream()
                 .collect(Collectors.groupingBy((q -> q.getDifficulty().name()))); // 按难度分类
@@ -217,14 +208,13 @@ public class TestServiceImpl implements TestService {
         // 随机选择 hard ID
         selectedIds.addAll(selectRandomIds(hardIds, hardCount));
 
-        for(int i=0;i<selectedIds.size();i++){
-            TestQuestions obj=new TestQuestions();
+        for (int i = 0; i < selectedIds.size(); i++) {
+            TestQuestions obj = new TestQuestions();
             obj.setTestId(testId);
             obj.setQuestionId(selectedIds.get(i));
             obj.setQuestionType(QuestionCategory.knowledge);
             testQuestionRepository.save(obj);
         }
-
 
     }
 
@@ -239,10 +229,9 @@ public class TestServiceImpl implements TestService {
         return ids.subList(0, count);
     }
 
-
     private void autoSelectAlgorithmQuestions(String chapter,
-                                              int easyCount, int mediumCount, int hardCount,Integer testId) {
-        List<AlgorithmQuestion> questions =algorithmQuestionRepository.findByChapter(chapter);
+            int easyCount, int mediumCount, int hardCount, Integer testId) {
+        List<AlgorithmQuestion> questions = algorithmQuestionRepository.findByChapter(chapter);
 
         Map<String, List<AlgorithmQuestion>> groupedByDifficulty = questions.stream()
                 .collect(Collectors.groupingBy((q -> q.getDifficulty().name()))); // 按难度分类
@@ -268,26 +257,28 @@ public class TestServiceImpl implements TestService {
         selectedIds.addAll(selectRandomIds(mediumIds, mediumCount));
         // 随机选择 hard ID
         selectedIds.addAll(selectRandomIds(hardIds, hardCount));
-        for(int i=0;i<selectedIds.size();i++){
-            TestQuestions obj=new TestQuestions();
+        for (int i = 0; i < selectedIds.size(); i++) {
+            TestQuestions obj = new TestQuestions();
             obj.setTestId(testId);
             obj.setQuestionId(selectedIds.get(i));
             obj.setQuestionType(QuestionCategory.algorithm);
             testQuestionRepository.save(obj);
         }
 
-
     }
+
     @Override
-    public TestResultDTO submitTest(Integer testId, TestSubmitDTO testSubmit){
-        Integer totalCorrect=0,easyCorrect=0,mediumCorrect=0,hardCorrect=0,easyNum=0,mediumNum=0,hardNum=0;
-        Test1 test=testRepository.getByTestId(testId);
-        QuestionCategory type=test.getQuestionType();
+    public TestResultDTO submitTest(Integer testId, TestSubmitDTO testSubmit) {
+        Integer totalCorrect = 0, easyCorrect = 0, mediumCorrect = 0, hardCorrect = 0, easyNum = 0, mediumNum = 0,
+                hardNum = 0;
+        Test1 test = testRepository.getByTestId(testId);
+        QuestionCategory type = test.getQuestionType();
         List<QuestionResult> questionResults = new ArrayList<>();
-        TestRecord testRecord = new TestRecord(0,testId,testSubmit.getUserId(),LocalDateTime.now(),0,0,0,0,0,0,0,0,0,"");
+        TestRecord testRecord = new TestRecord(0, testId, testSubmit.getUserId(), LocalDateTime.now(), 0, 0, 0, 0, 0, 0,
+                0, 0, 0, "");
         testRecordRepository.save(testRecord);
-        List<TestRecord> testRecords= testRecordRepository.getByTestId(testId);
-        Integer recordId=0;
+        List<TestRecord> testRecords = testRecordRepository.getByTestId(testId);
+        Integer recordId = 0;
         if (testRecords != null && !testRecords.isEmpty()) {
             TestRecord lastTestRecord = testRecords.get(testRecords.size() - 1);
             recordId = lastTestRecord.getRecordId();
@@ -296,31 +287,28 @@ public class TestServiceImpl implements TestService {
             // 处理没有找到记录的情况
             System.out.println("");
         }
-        Boolean flag=false;
+        Boolean flag = false;
 
-
-
-        if(type==QuestionCategory.knowledge){
+        if (type == QuestionCategory.knowledge) {
             for (Map.Entry<Integer, String> entry : testSubmit.getAnswers().entrySet()) {
                 Integer questionId = entry.getKey();
                 String userAnswer = entry.getValue();
 
                 KnowledgeQuestion question = knowledgeQuestionRepository.getByQuestionId(questionId);
 
-
                 if (question.getDifficulty() == Difficulty.easy) {
                     easyNum++;
                     if (userAnswer.equals(question.getCorrectAnswer())) {
                         easyCorrect++;
                         totalCorrect++;
-                        flag=true;
+                        flag = true;
                     }
                 } else if (question.getDifficulty() == Difficulty.medium) {
                     mediumNum++;
                     if (userAnswer.equals(question.getCorrectAnswer())) {
                         mediumCorrect++;
                         totalCorrect++;
-                        flag=true;
+                        flag = true;
 
                     }
                 } else {
@@ -328,13 +316,12 @@ public class TestServiceImpl implements TestService {
                     if (userAnswer.equals(question.getCorrectAnswer())) {
                         hardCorrect++;
                         totalCorrect++;
-                        flag=true;
+                        flag = true;
                     }
                 }
-                TestAnswerDetail testAnswerDetail = new TestAnswerDetail(recordId,questionId,userAnswer,flag);
+                TestAnswerDetail testAnswerDetail = new TestAnswerDetail(recordId, questionId, userAnswer, flag);
                 flag = false;
                 testAnswerDetailRepository.save(testAnswerDetail);
-
 
                 // Add question result to list
                 QuestionResult result = new QuestionResult();
@@ -363,14 +350,14 @@ public class TestServiceImpl implements TestService {
             resultDTO.setAccuracyByDifficulty(accuracyByDifficulty);
             resultDTO.setQuestionResults(questionResults);
 
-            testRecord = new TestRecord(recordId,testId,testSubmit.getUserId(),testSubmit.getStartTime(),
-                    testSubmit.getTotalTime(),testSubmit.getAnswers().size(),totalCorrect,easyNum,easyCorrect,mediumNum,mediumCorrect,hardNum,hardCorrect,"");
+            testRecord = new TestRecord(recordId, testId, testSubmit.getUserId(), testSubmit.getStartTime(),
+                    testSubmit.getTotalTime(), testSubmit.getAnswers().size(), totalCorrect, easyNum, easyCorrect,
+                    mediumNum, mediumCorrect, hardNum, hardCorrect, "");
             testRecordRepository.save(testRecord);
 
             return resultDTO;
-        }
-        else{
-//
+        } else {
+            //
         }
         return null;
 
@@ -388,7 +375,7 @@ public class TestServiceImpl implements TestService {
 
         // 获取记录ID
         List<TestRecord> testRecords = testRecordRepository.getByTestId(testId);
-        //获取最新的记录
+        // 获取最新的记录
         Integer recordId = testRecords.get(testRecords.size() - 1).getRecordId();
 
         List<QuestionResult1> questionResults = new ArrayList<>();
@@ -431,8 +418,7 @@ public class TestServiceImpl implements TestService {
                     recordId,
                     questionId,
                     submissionId,
-                    isCorrect
-            );
+                    isCorrect);
             testAnswerDetailRepository.save(testAnswerDetail);
 
             // 获取测试用例结果
@@ -448,7 +434,7 @@ public class TestServiceImpl implements TestService {
                     .memoryUsage(submission.getMemoryConsumption())
                     .language(submission.getLanguage())
                     .code(submission.getSourceCode())
-//                    .errorMessage(submission.getErrorMessage())
+                    // .errorMessage(submission.getErrorMessage())
                     .testCases(testCases)
                     .build();
 
@@ -489,20 +475,58 @@ public class TestServiceImpl implements TestService {
         return null;
     }
 
-//    @Override
-//    public TestResultDTO getTestResult(Integer testId) {
-//        TestRecord obj=testRecordRepository.getByTestId(testId);
-//        TestResultDTO resultDTO = new TestResultDTO();
-//        resultDTO.setTestId(testId);
-//        resultDTO.setUserId(obj.getUserId());
-//        resultDTO.setOverallAccuracy();
-//        resultDTO.setAccuracyByDifficulty(accuracyByDifficulty);
-//        resultDTO.setQuestionResults(questionResults);
-//    }
+    @Override
+    public void deleteTest(Integer testId) {
+        try {
+            // 检查试卷是否存在
+            if (!testRepository.existsById(testId)) {
+                System.out.println("试卷不存在: " + testId);
+                return;
+            }
 
-    private void notAutoSelectKnowledgeQuestions(String chapter, List<Integer>questionsId, Integer testId){
-        for(int i=0;i<questionsId.size();i++){
-            TestQuestions obj=new TestQuestions();
+            // 获取与该试卷相关的所有题目ID
+            List<TestQuestions> testQuestions = testQuestionRepository.getByTestId(testId);
+            List<Integer> questionIds = testQuestions.stream()
+                    .map(TestQuestions::getQuestionId)
+                    .collect(Collectors.toList());
+
+            // 获取与该试卷相关的所有记录ID
+            List<TestRecord> testRecords = testRecordRepository.findByTestId(testId);
+            List<Integer> recordIds = testRecords.stream()
+                    .map(TestRecord::getRecordId)
+                    .collect(Collectors.toList());
+
+            // 1. 删除相关的TestAnswerDetail记录
+            System.out.println("开始删除试卷的答题记录: " + testId);
+            for (Integer recordId : recordIds) {
+                testAnswerDetailRepository.deleteByRecordId(recordId);
+            }
+            System.out.println("答题记录删除完成");
+
+            // 2. 删除相关的TestRecord记录
+            System.out.println("开始删除试卷的考试记录: " + testId);
+            testRecordRepository.deleteByTestId(testId);
+            System.out.println("考试记录删除完成");
+
+            // 3. 删除相关的TestQuestions记录
+            System.out.println("开始删除试卷的题目关联: " + testId);
+            testQuestionRepository.deleteByTestId(testId);
+            System.out.println("题目关联删除完成");
+
+            // 4. 最后删除试卷本身
+            System.out.println("开始删除试卷: " + testId);
+            testRepository.deleteById(testId);
+            System.out.println("试卷删除完成: " + testId);
+        } catch (Exception e) {
+            System.err.println("删除试卷时发生错误: " + e.getMessage());
+            e.printStackTrace();
+            throw e; // 重新抛出异常以便事务回滚
+        }
+    }
+
+    private void notAutoSelectKnowledgeQuestions(String chapter, List<Integer> questionsId, Integer testId) {
+        for (int i = 0; i < questionsId.size(); i++) {
+            TestQuestions obj = new TestQuestions();
             obj.setTestId(testId);
             obj.setQuestionId(questionsId.get(i));
             obj.setQuestionType(QuestionCategory.knowledge);
@@ -510,9 +534,9 @@ public class TestServiceImpl implements TestService {
         }
     }
 
-    private void notAutoSelectAlgorithmQuestions(String chapter, List<Integer>questionsId, Integer testId){
-        for(int i=0;i<questionsId.size();i++){
-            TestQuestions obj=new TestQuestions();
+    private void notAutoSelectAlgorithmQuestions(String chapter, List<Integer> questionsId, Integer testId) {
+        for (int i = 0; i < questionsId.size(); i++) {
+            TestQuestions obj = new TestQuestions();
             obj.setTestId(testId);
             obj.setQuestionId(questionsId.get(i));
             obj.setQuestionType(QuestionCategory.algorithm);
@@ -520,95 +544,101 @@ public class TestServiceImpl implements TestService {
         }
     }
 
-
-
-//    ---------testrecord
-//    public TestRecordDTO submitTest(Integer testId, Integer userId, List<String> answers) {
-//        // 获取试卷信息
-//        Test1 test = this.getTestById(testId);
-//        List<KnowledgeQuestion> questions = questionService.getQuestionsByIds(test.getQuestionIds());
-//
-//        // 创建考试记录
-//        TestRecord record = new TestRecord();
-//        record.setTest(test);
-//        record.setUserId(userId);
-//        record.setStartTime(LocalDateTime.now());
-//        record.setTotalQuestions(questions.size());
-//
-//        // 统计各难度题目数量
-//        Map<String, Integer> difficultyTotals = countDifficultyTotals(questions);
-//        record.setEasyTotal(difficultyTotals.get("easy"));
-//        record.setMediumTotal(difficultyTotals.get("medium"));
-//        record.setHardTotal(difficultyTotals.get("hard"));
-//
-//        // 评分并记录答案
-//        List<TestAnswerDetail> answerDetails = new ArrayList<>();
-//        Map<String, Integer> correctCounts = new HashMap<>();
-//
-//        for (int i = 0; i < questions.size(); i++) {
-//            KnowledgeQuestion question = questions.get(i);
-//            String userAnswer = answers.get(i);
-//            boolean isCorrect = checkAnswer(question, userAnswer);
-//
-//            // 记录答案
-//            TestAnswerDetail detail = new TestAnswerDetail();
-//            detail.setTestRecord(record);
-//            detail.setQuestion(question);
-//            detail.setUserAnswer(userAnswer);
-//            detail.setIsCorrect(isCorrect);
-//            answerDetails.add(detail);
-//
-//            // 统计正确数
-//            if (isCorrect) {
-//                String difficulty = question.getDifficulty();
-//                correctCounts.merge(difficulty, 1, Integer::sum);
-//            }
-//        }
-//
-//        // 更新统计信息
-//        record.setCorrectCount(correctCounts.values().stream().mapToInt(Integer::intValue).sum());
-//        record.setEasyCorrect(correctCounts.getOrDefault("easy", 0));
-//        record.setMediumCorrect(correctCounts.getOrDefault("medium", 0));
-//        record.setHardCorrect(correctCounts.getOrDefault("hard", 0));
-//        record.setStatus("completed");
-//
-//        // 保存记录
-//        record = testRecordRepository.save(record);
-//        answerDetailRepository.saveAll(answerDetails);
-//
-//        return convertToDTO(record);
-//    }
-//
-//    public TestRecordDTO getTestResult(Integer testId, Integer userId) {
-//        TestRecord record = testRecordRepository.findByTestIdAndUserId(testId, userId)
-//                .orElseThrow(() -> new RuntimeException("考试记录不存在"));
-//        return convertToDTO(record);
-//    }
-//
-//    private boolean checkAnswer(KnowledgeQuestion question, String userAnswer) {
-//        if (question.getQuestionType().equals("choice")) {
-//            return question.getCorrectAnswer().equals(userAnswer);
-//        } else {
-//            return Boolean.parseBoolean(question.getCorrectAnswer()) == Boolean.parseBoolean(userAnswer);
-//        }
-//    }
-//
-//    private TestRecordDTO convertToDTO(TestRecord record) {
-//        TestRecordDTO dto = new TestRecordDTO();
-//        // ... 设置基本信息 ...
-//
-//        // 计算正确率
-//        dto.setCorrectRate(calculateRate(record.getCorrectCount(), record.getTotalQuestions()));
-//        dto.setEasyRate(calculateRate(record.getEasyCorrect(), record.getEasyTotal()));
-//        dto.setMediumRate(calculateRate(record.getMediumCorrect(), record.getMediumTotal()));
-//        dto.setHardRate(calculateRate(record.getHardCorrect(), record.getHardTotal()));
-//
-//        return dto;
-//    }
-//
-//    private BigDecimal calculateRate(int correct, int total) {
-//        if (total == 0) return BigDecimal.ZERO;
-//        return BigDecimal.valueOf(correct)
-//                .divide(BigDecimal.valueOf(total), 2, RoundingMode.HALF_UP);
-//    }
+    // ---------testrecord
+    // public TestRecordDTO submitTest(Integer testId, Integer userId, List<String>
+    // answers) {
+    // // 获取试卷信息
+    // Test1 test = this.getTestById(testId);
+    // List<KnowledgeQuestion> questions =
+    // questionService.getQuestionsByIds(test.getQuestionIds());
+    //
+    // // 创建考试记录
+    // TestRecord record = new TestRecord();
+    // record.setTest(test);
+    // record.setUserId(userId);
+    // record.setStartTime(LocalDateTime.now());
+    // record.setTotalQuestions(questions.size());
+    //
+    // // 统计各难度题目数量
+    // Map<String, Integer> difficultyTotals = countDifficultyTotals(questions);
+    // record.setEasyTotal(difficultyTotals.get("easy"));
+    // record.setMediumTotal(difficultyTotals.get("medium"));
+    // record.setHardTotal(difficultyTotals.get("hard"));
+    //
+    // // 评分并记录答案
+    // List<TestAnswerDetail> answerDetails = new ArrayList<>();
+    // Map<String, Integer> correctCounts = new HashMap<>();
+    //
+    // for (int i = 0; i < questions.size(); i++) {
+    // KnowledgeQuestion question = questions.get(i);
+    // String userAnswer = answers.get(i);
+    // boolean isCorrect = checkAnswer(question, userAnswer);
+    //
+    // // 记录答案
+    // TestAnswerDetail detail = new TestAnswerDetail();
+    // detail.setTestRecord(record);
+    // detail.setQuestion(question);
+    // detail.setUserAnswer(userAnswer);
+    // detail.setIsCorrect(isCorrect);
+    // answerDetails.add(detail);
+    //
+    // // 统计正确数
+    // if (isCorrect) {
+    // String difficulty = question.getDifficulty();
+    // correctCounts.merge(difficulty, 1, Integer::sum);
+    // }
+    // }
+    //
+    // // 更新统计信息
+    // record.setCorrectCount(correctCounts.values().stream().mapToInt(Integer::intValue).sum());
+    // record.setEasyCorrect(correctCounts.getOrDefault("easy", 0));
+    // record.setMediumCorrect(correctCounts.getOrDefault("medium", 0));
+    // record.setHardCorrect(correctCounts.getOrDefault("hard", 0));
+    // record.setStatus("completed");
+    //
+    // // 保存记录
+    // record = testRecordRepository.save(record);
+    // answerDetailRepository.saveAll(answerDetails);
+    //
+    // return convertToDTO(record);
+    // }
+    //
+    // public TestRecordDTO getTestResult(Integer testId, Integer userId) {
+    // TestRecord record = testRecordRepository.findByTestIdAndUserId(testId,
+    // userId)
+    // .orElseThrow(() -> new RuntimeException("考试记录不存在"));
+    // return convertToDTO(record);
+    // }
+    //
+    // private boolean checkAnswer(KnowledgeQuestion question, String userAnswer) {
+    // if (question.getQuestionType().equals("choice")) {
+    // return question.getCorrectAnswer().equals(userAnswer);
+    // } else {
+    // return Boolean.parseBoolean(question.getCorrectAnswer()) ==
+    // Boolean.parseBoolean(userAnswer);
+    // }
+    // }
+    //
+    // private TestRecordDTO convertToDTO(TestRecord record) {
+    // TestRecordDTO dto = new TestRecordDTO();
+    // // ... 设置基本信息 ...
+    //
+    // // 计算正确率
+    // dto.setCorrectRate(calculateRate(record.getCorrectCount(),
+    // record.getTotalQuestions()));
+    // dto.setEasyRate(calculateRate(record.getEasyCorrect(),
+    // record.getEasyTotal()));
+    // dto.setMediumRate(calculateRate(record.getMediumCorrect(),
+    // record.getMediumTotal()));
+    // dto.setHardRate(calculateRate(record.getHardCorrect(),
+    // record.getHardTotal()));
+    //
+    // return dto;
+    // }
+    //
+    // private BigDecimal calculateRate(int correct, int total) {
+    // if (total == 0) return BigDecimal.ZERO;
+    // return BigDecimal.valueOf(correct)
+    // .divide(BigDecimal.valueOf(total), 2, RoundingMode.HALF_UP);
+    // }
 }

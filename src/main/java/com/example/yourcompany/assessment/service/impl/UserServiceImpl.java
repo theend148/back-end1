@@ -31,10 +31,36 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserDTO updateUser(User user) {
-        if (user.getPassword() != null) {
-            user.setPassword(passwordEncoder.encode(user.getPassword()));
+        // 获取现有用户
+        User existingUser = userRepository.findById(user.getUserId())
+                .orElseThrow(() -> new RuntimeException("User not found with id: " + user.getUserId()));
+
+        // 检查是否更新密码
+        if (user.getPassword() != null && !user.getPassword().isEmpty()) {
+            // 如果有oldPassword字段，这是密码更新
+            if (user.getOldPassword() != null) {
+                // 验证旧密码
+                if (!passwordEncoder.matches(user.getOldPassword(), existingUser.getPassword())) {
+                    throw new RuntimeException("Old password is incorrect");
+                }
+                // 更新为新密码
+                existingUser.setPassword(passwordEncoder.encode(user.getNewPassword()));
+            } else {
+                // 直接更新密码
+                existingUser.setPassword(passwordEncoder.encode(user.getPassword()));
+            }
         }
-        return convertToDTO(userRepository.save(user));
+
+        // 更新基本信息
+        if (user.getUsername() != null && !user.getUsername().isEmpty()) {
+            existingUser.setUsername(user.getUsername());
+        }
+
+        if (user.getEmail() != null) {
+            existingUser.setEmail(user.getEmail());
+        }
+
+        return convertToDTO(userRepository.save(existingUser));
     }
 
     @Override
